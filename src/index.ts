@@ -1,1 +1,1 @@
-export * from "./AmplienceImageStudio";
+export * from './AmplienceImageStudio';

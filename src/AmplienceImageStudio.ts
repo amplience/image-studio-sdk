@@ -34,7 +34,7 @@ export class AmplienceImageStudio {
   constructor(protected options: AmplienceImageStudioOptions) {}
 
   public getImage(
-    options: GenerateImageOptions
+    options: GenerateImageOptions,
   ): Promise<GenerateImageResponse> {
     const instance = this.createInstance<GenerateImageResponse>();
     instance.activate(options);
@@ -42,25 +42,25 @@ export class AmplienceImageStudio {
   }
 
   public getFileExtensionFromMimeType = (
-    mimeType: string | null
+    mimeType: string | null,
   ): string | undefined => {
     switch (mimeType) {
-      case "image/jpeg":
-        return "jpg";
-      case "image/png":
-        return "png";
-      case "image/bmp":
-        return "bmp";
-      case "image/gif":
-        return "gif";
-      case "image/tiff":
-        return "tif";
-      case "image/webp":
-        return "webp";
-      case "image/jp2":
-        return "jp2";
-      case "image/avif":
-        return "avif";
+      case 'image/jpeg':
+        return 'jpg';
+      case 'image/png':
+        return 'png';
+      case 'image/bmp':
+        return 'bmp';
+      case 'image/gif':
+        return 'gif';
+      case 'image/tiff':
+        return 'tif';
+      case 'image/webp':
+        return 'webp';
+      case 'image/jp2':
+        return 'jp2';
+      case 'image/avif':
+        return 'avif';
       default:
         return undefined;
     }
@@ -80,7 +80,7 @@ interface MessageData {
 class AmplienceImageStudioInstance<T = unknown> {
   public promise: Promise<T>;
   private _resolve?: (result: T) => void;
-  private _reject?: (reason: any) => void;
+  private _reject?: (reason: Error) => void;
 
   protected imageOptions: GenerateImageOptions | undefined;
 
@@ -99,13 +99,13 @@ class AmplienceImageStudioInstance<T = unknown> {
   activate(imageOptions: GenerateImageOptions) {
     const {
       baseUrl,
-      windowTarget = "_blank",
-      windowFeatures = "popup=true,status=false,location=false,toolbar=false,menubar=false",
+      windowTarget = '_blank',
+      windowFeatures = 'popup=true,status=false,location=false,toolbar=false,menubar=false',
     }: AmplienceImageStudioOptions = this.options;
 
     const newWindow = window.open(baseUrl, windowTarget, windowFeatures);
     if (!newWindow) {
-      this.reject("Image-Studio failed to launch");
+      this.reject('Image-Studio failed to launch');
       return;
     }
 
@@ -124,7 +124,7 @@ class AmplienceImageStudioInstance<T = unknown> {
       }
     }, 100);
 
-    window.addEventListener("message", this.listener.bind(this));
+    window.addEventListener('message', this.listener.bind(this));
   }
 
   protected listener(event: WindowMessageDataIn) {
@@ -153,17 +153,17 @@ class AmplienceImageStudioInstance<T = unknown> {
     if (this.instanceWindow) {
       // process sending messages
       const message: WindowMessageDataOut = {};
-      if ("extensionMeta" in messageData) {
+      if ('extensionMeta' in messageData) {
         message.extensionMeta = {
-          exportContext: "Content Form",
+          exportContext: 'Content Form',
         };
       }
 
-      if ("srcImageUrl" in messageData) {
+      if ('srcImageUrl' in messageData) {
         message.inputImageUrl = messageData.srcImageUrl;
       }
 
-      if ("focus" in messageData) {
+      if ('focus' in messageData) {
         message.focus = true;
       }
 
@@ -184,7 +184,7 @@ class AmplienceImageStudioInstance<T = unknown> {
     this._reject = undefined;
   }
 
-  protected reject(reason: string) {
+  protected reject(reason: Error) {
     this._reject && this._reject(reason);
     this._resolve = undefined;
     this._reject = undefined;

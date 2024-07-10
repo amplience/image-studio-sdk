@@ -26,6 +26,7 @@
     "build:esm": "tsc --project tsconfig.json --module es2022 --outDir ./dist/esm/",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "fix": "eslint . --fix --ext .ts",
     "lint": "eslint . --ext .ts --max-warnings 0"
   },
   "keywords": [],
