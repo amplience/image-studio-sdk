@@ -87,7 +87,7 @@ class AmplienceImageStudioInstance<T = unknown> {
   protected isActive = false;
   protected instanceWindow: Window | undefined;
 
-  protected pollingInterval: NodeJS.Timer | undefined;
+  protected pollingInterval: NodeJS.Timeout | undefined;
 
   constructor(protected options: AmplienceImageStudioOptions) {
     this.promise = new Promise((resolve, reject) => {

@@ -25,5 +25,6 @@ dist-ssr
 cdk.out
 
 coverage/
+storybook-static/
 
 *storybook.log
