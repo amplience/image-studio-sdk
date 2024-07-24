@@ -6,12 +6,18 @@ export type AmplienceImageStudioOptions = {
   modalContainer?: string;
 };
 
-export type GenerateImageOptions = {
+export type LaunchImageStudioOptions = {
   srcImageUrl: string;
 };
 
-export type GenerateImageResponse = {
-  url: string | null;
+export enum ImageStudioReason {
+  IMAGE,
+  CLOSED,
+}
+
+export type LaunchImageStudioResponse = {
+  reason: ImageStudioReason
+  url?: string;
 };
 
 interface WindowMessageDataOut {
@@ -33,11 +39,11 @@ interface WindowMessageDataIn {
 export class AmplienceImageStudio {
   constructor(protected options: AmplienceImageStudioOptions) {}
 
-  public getImage(
-    options: GenerateImageOptions,
-  ): Promise<GenerateImageResponse> {
-    const instance = this.createInstance<GenerateImageResponse>();
-    instance.activate(options);
+  public launch(
+    options: LaunchImageStudioOptions,
+  ): Promise<LaunchImageStudioResponse> {
+    const instance = this.createInstance<LaunchImageStudioResponse>();
+    instance.launch(options);
     return instance.promise;
   }
 
@@ -66,7 +72,7 @@ export class AmplienceImageStudio {
     }
   };
 
-  private createInstance<T = unknown>() {
+  private createInstance<T>() {
     return new AmplienceImageStudioInstance<T>(this.options);
   }
 }
@@ -77,12 +83,12 @@ interface MessageData {
   focus?: boolean;
 }
 
-class AmplienceImageStudioInstance<T = unknown> {
+class AmplienceImageStudioInstance<T> {
   public promise: Promise<T>;
   private _resolve?: (result: T) => void;
   private _reject?: (reason: Error) => void;
 
-  protected imageOptions: GenerateImageOptions | undefined;
+  protected imageOptions: LaunchImageStudioOptions | undefined;
 
   protected isActive = false;
   protected instanceWindow: Window | undefined;
@@ -96,7 +102,7 @@ class AmplienceImageStudioInstance<T = unknown> {
     });
   }
 
-  activate(imageOptions: GenerateImageOptions) {
+  launch(imageOptions: LaunchImageStudioOptions) {
     const {
       baseUrl,
       windowTarget = '_blank',
@@ -105,7 +111,7 @@ class AmplienceImageStudioInstance<T = unknown> {
 
     const newWindow = window.open(baseUrl, windowTarget, windowFeatures);
     if (!newWindow) {
-      this.reject('Image-Studio failed to launch');
+      this.reject(new Error('Image-Studio failed to launch'));
       return;
     }
 
@@ -119,7 +125,9 @@ class AmplienceImageStudioInstance<T = unknown> {
      */
     this.pollingInterval = setInterval(() => {
       if (newWindow.closed) {
-        this.resolve({ url: null } as T);
+        this.resolve({ 
+          reason: ImageStudioReason.CLOSED
+        } as T);
         this.deactivate();
       }
     }, 100);
@@ -130,6 +138,7 @@ class AmplienceImageStudioInstance<T = unknown> {
   protected listener(event: WindowMessageDataIn) {
     if (event.data?.exportImageUrl) {
       this.resolve({
+        reason: ImageStudioReason.IMAGE,
         url: event.data?.exportImageUrl,
       } as T);
       this.deactivate();

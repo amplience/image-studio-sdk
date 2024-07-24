@@ -4,19 +4,14 @@
   "type": "module",
   "license": "Apache-2.0",
   "description": "Image Studio SDK",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/cjs/index.d.ts",
   "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      }
+    "import": {
+      "types": "./dist/esm/index.d.ts",
+      "default": "./dist/esm/index.js"
+    },
+    "require": {
+      "types": "./dist/cjs/index.d.ts",
+      "default": "./dist/cjs/index.js"
     }
   },
   "scripts": {
@@ -32,7 +27,7 @@
   "keywords": [],
   "author": "",
   "devDependencies": {
-    "@amplience/gql-ai-sdk": "1.0.2--canary.12.b443195.0",
+    "@amplience/gql-ai-sdk": "1.1.2--canary.14.4b4a614.0",
     "@chromatic-com/storybook": "^1.6.1",
     "@storybook/addon-essentials": "^8.2.1",
     "@storybook/addon-interactions": "^8.2.1",

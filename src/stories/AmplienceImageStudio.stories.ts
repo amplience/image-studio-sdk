@@ -1,15 +1,19 @@
 import { StoryObj, Meta } from '@storybook/html';
-import { FileService } from '@amplience/gql-ai-sdk';
+import { expect } from '@storybook/test';
+import { FetchProvider, FileService, FileServiceResponse } from '@amplience/gql-ai-sdk';
 import {
   AmplienceImageStudio,
   AmplienceImageStudioOptions,
-  GenerateImageOptions,
+  ImageStudioReason,
+  LaunchImageStudioOptions,
 } from '../AmplienceImageStudio';
 
 interface AmplienceImageStudioProps {
-  token: string;
-  serviceUrl: string;
   imageUrl: string;
+  provider: {
+    token: string;
+    serviceUrl: string;
+  }
   options: AmplienceImageStudioOptions;
 }
 
@@ -26,21 +30,26 @@ const meta: Meta<AmplienceImageStudioProps> = {
     const launch = document.createElement('button');
     launch.innerText = 'Launch';
     launch.onclick = async () => {
-      const fileService = new FileService(args.serviceUrl).withToken(
-        args.token,
-      );
-      const tempFileResponse = await fileService.createTempFromUrl(
+      const fetchProvider = new FetchProvider(args.provider.serviceUrl).withToken(args.provider.token)
+      const fileService = new FileService(fetchProvider);
+      const tempFileResponse: FileServiceResponse = await fileService.createTempFromUrl(
         args.imageUrl,
       );
-      const getImageOptions: GenerateImageOptions = {
+      const getImageOptions: LaunchImageStudioOptions = {
         srcImageUrl: tempFileResponse?.url,
       };
-      imageStudio.getImage(getImageOptions).then(
+      imageStudio.launch(getImageOptions).then(
         (result) => {
-          if (result.url) {
-            text.nodeValue = result.url;
-          } else {
-            text.nodeValue = 'Closed without Image';
+          switch(result.reason) {
+            case ImageStudioReason.IMAGE:
+              text.nodeValue = result?.url ?? '';
+              break;
+            case ImageStudioReason.CLOSED:
+              text.nodeValue = 'Closed without Image';
+              break;
+            default:
+              text.nodeValue = 'Unknown Image Studio Reason';
+              break;
           }
         },
         (error) => {
@@ -60,14 +69,51 @@ const meta: Meta<AmplienceImageStudioProps> = {
 export default meta;
 type Story = StoryObj;
 
-export const Default: Story = {
+export const TryMe: Story = {
   args: {
-    token: 'Bearer-Token-Here',
-    serviceUrl: 'https://graphql-gateway.amplience-qa.net/graphql',
+    provider: {
+      token: 'Bearer-Token-Here',
+      serviceUrl: 'https://graphql-gateway.amplience-qa.net/graphql',
+    },
     imageUrl:
       'https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8',
     options: {
       baseUrl: 'https://app.amplience-qa.net/image-studio/',
     },
+  },
+};
+
+export const CloseWithoutSendingImage: Story = {
+  play: async () => {
+    const fetchProvider = new FetchProvider('https://graphql-gateway.amplience-qa.net/graphql').withToken('Bearer-Token-Here')
+    const fileService = new FileService(fetchProvider);
+    const tempFileResponse: FileServiceResponse = await fileService.createTempFromUrl('https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8');
+    const getImageOptions: LaunchImageStudioOptions = {
+      srcImageUrl: tempFileResponse?.url,
+    };
+    const imageStudio = new AmplienceImageStudio({
+      baseUrl: 'https://app.amplience-qa.net/image-studio/',
+    });
+    const response = await imageStudio.launch(getImageOptions);
+
+    expect(response?.reason).toBe(ImageStudioReason.CLOSED);
+  },
+};
+
+export const SaveImageToContentForm: Story = {
+  play: async () => {
+    const fetchProvider = new FetchProvider('https://graphql-gateway.amplience-qa.net/graphql').withToken('Bearer-Token-Here')
+    const fileService = new FileService(fetchProvider);
+    const tempFileResponse: FileServiceResponse = await fileService.createTempFromUrl('https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8');
+    const getImageOptions: LaunchImageStudioOptions = {
+      srcImageUrl: tempFileResponse?.url,
+    };
+    const imageStudio = new AmplienceImageStudio({
+      baseUrl: 'https://app.amplience-qa.net/image-studio/',
+    });
+    const response = await imageStudio.launch(getImageOptions);
+
+    expect(response?.reason).toBe(ImageStudioReason.IMAGE);
+    expect(response?.url).not.toBe(tempFileResponse?.url);
   },
 };
