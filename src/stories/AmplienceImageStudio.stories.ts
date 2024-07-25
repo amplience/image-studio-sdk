@@ -37,6 +37,7 @@ export const TryMe: Story = {
     },
     imageUrl:
       'https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8',
+    imageName: 'TestImageName',
     options: {
       baseUrl: 'https://app.amplience-qa.net/image-studio/',
     },
@@ -58,6 +59,7 @@ export const TryMe: Story = {
       );
       const launchOptions: LaunchImageStudioOptions = {
         srcImageUrl: tempFileResponse?.url,
+        srcName: args.imageName,
       };
       imageStudio.launch(launchOptions).then(
         (result) => {
@@ -93,6 +95,7 @@ export const CloseWithoutSendingImage: Story = {
     const tempFileResponse: FileServiceResponse = await fileService.createTempFromUrl('https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8');
     const getImageOptions: LaunchImageStudioOptions = {
       srcImageUrl: tempFileResponse?.url,
+      srcName: 'TestImageName'
     };
     const imageStudio = new AmplienceImageStudio({
       baseUrl: 'https://app.amplience-qa.net/image-studio/',
@@ -110,6 +113,7 @@ export const SaveImageToContentForm: Story = {
     const tempFileResponse: FileServiceResponse = await fileService.createTempFromUrl('https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8');
     const getImageOptions: LaunchImageStudioOptions = {
       srcImageUrl: tempFileResponse?.url,
+      srcName: 'TestImageName'
     };
     const imageStudio = new AmplienceImageStudio({
       baseUrl: 'https://app.amplience-qa.net/image-studio/',

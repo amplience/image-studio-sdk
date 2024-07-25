@@ -10,6 +10,7 @@ export type AmplienceImageStudioOptions = {
 
 export type LaunchImageStudioOptions = {
   srcImageUrl: string;
+  srcName: string;
 };
 
 export class AmplienceImageStudio {
@@ -31,6 +32,7 @@ export class AmplienceImageStudio {
 interface MessageData {
   extensionMeta?: boolean;
   srcImageUrl?: string;
+  srcImageName?: string;
   focus?: boolean;
 }
 
@@ -101,6 +103,7 @@ class AmplienceImageStudioInstance<T> {
       this.sendSDKEvent({
         extensionMeta: true,
         srcImageUrl: this.imageOptions?.srcImageUrl,
+        srcImageName: this.imageOptions?.srcName
       });
     }
 
@@ -121,6 +124,10 @@ class AmplienceImageStudioInstance<T> {
 
       if ('srcImageUrl' in messageData) {
         message.inputImageUrl = messageData.srcImageUrl;
+      }
+
+      if ('srcImageName' in messageData) {
+        message.inputImageName = messageData.srcImageName;
       }
 
       if ('focus' in messageData) {

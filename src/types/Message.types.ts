@@ -3,6 +3,7 @@ export interface SDKEvent {
       exportContext: string;
     };
     inputImageUrl?: string;
+    inputImageName?: string;
     focus?: boolean;
   }
   
