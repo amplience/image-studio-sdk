@@ -1,3 +1,5 @@
+import { ImageStudioLaunchResponse, SDKEvent, ImageStudioReason, ImageStudioEvent } from "./types";
+
 export type AmplienceImageStudioOptions = {
   baseUrl: string;
 
@@ -10,67 +12,16 @@ export type LaunchImageStudioOptions = {
   srcImageUrl: string;
 };
 
-export enum ImageStudioReason {
-  IMAGE,
-  CLOSED,
-}
-
-export type LaunchImageStudioResponse = {
-  reason: ImageStudioReason
-  url?: string;
-};
-
-interface WindowMessageDataOut {
-  extensionMeta?: {
-    exportContext: string;
-  };
-  inputImageUrl?: string;
-  focus?: boolean;
-}
-
-interface WindowMessageDataIn {
-  data: {
-    exportImageUrl?: string;
-    connect?: boolean;
-    disconnect?: boolean;
-  };
-}
-
 export class AmplienceImageStudio {
   constructor(protected options: AmplienceImageStudioOptions) {}
 
   public launch(
     options: LaunchImageStudioOptions,
-  ): Promise<LaunchImageStudioResponse> {
-    const instance = this.createInstance<LaunchImageStudioResponse>();
+  ): Promise<ImageStudioLaunchResponse> {
+    const instance = this.createInstance<ImageStudioLaunchResponse>();
     instance.launch(options);
     return instance.promise;
   }
-
-  public getFileExtensionFromMimeType = (
-    mimeType: string | null,
-  ): string | undefined => {
-    switch (mimeType) {
-      case 'image/jpeg':
-        return 'jpg';
-      case 'image/png':
-        return 'png';
-      case 'image/bmp':
-        return 'bmp';
-      case 'image/gif':
-        return 'gif';
-      case 'image/tiff':
-        return 'tif';
-      case 'image/webp':
-        return 'webp';
-      case 'image/jp2':
-        return 'jp2';
-      case 'image/avif':
-        return 'avif';
-      default:
-        return undefined;
-    }
-  };
 
   private createInstance<T>() {
     return new AmplienceImageStudioInstance<T>(this.options);
@@ -121,7 +72,7 @@ class AmplienceImageStudioInstance<T> {
 
     /**
      * Interval to check for a closed image studio
-     * When the window is closed, resolve with a null url
+     * When the window is closed, resolve with a CLOSED response
      */
     this.pollingInterval = setInterval(() => {
       if (newWindow.closed) {
@@ -132,10 +83,10 @@ class AmplienceImageStudioInstance<T> {
       }
     }, 100);
 
-    window.addEventListener('message', this.listener.bind(this));
+    window.addEventListener('message', this.imageStudioMessageListener.bind(this));
   }
 
-  protected listener(event: WindowMessageDataIn) {
+  protected imageStudioMessageListener(event: ImageStudioEvent) {
     if (event.data?.exportImageUrl) {
       this.resolve({
         reason: ImageStudioReason.IMAGE,
@@ -147,7 +98,7 @@ class AmplienceImageStudioInstance<T> {
     if (event.data?.connect && !this.isActive) {
       this.isActive = true;
       // on connection, submit the srcImageUrl and extension metadata.
-      this.sendWindowMessages({
+      this.sendSDKEvent({
         extensionMeta: true,
         srcImageUrl: this.imageOptions?.srcImageUrl,
       });
@@ -158,10 +109,10 @@ class AmplienceImageStudioInstance<T> {
     }
   }
 
-  protected sendWindowMessages(messageData: MessageData) {
+  protected sendSDKEvent(messageData: MessageData) {
     if (this.instanceWindow) {
       // process sending messages
-      const message: WindowMessageDataOut = {};
+      const message: SDKEvent = {};
       if ('extensionMeta' in messageData) {
         message.extensionMeta = {
           exportContext: 'Content Form',

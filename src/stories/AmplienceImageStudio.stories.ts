@@ -4,9 +4,9 @@ import { FetchProvider, FileService, FileServiceResponse } from '@amplience/gql-
 import {
   AmplienceImageStudio,
   AmplienceImageStudioOptions,
-  ImageStudioReason,
   LaunchImageStudioOptions,
 } from '../AmplienceImageStudio';
+import { ImageStudioReason } from '../types';
 
 interface AmplienceImageStudioProps {
   imageUrl: string;
@@ -20,6 +20,27 @@ interface AmplienceImageStudioProps {
 const meta: Meta<AmplienceImageStudioProps> = {
   title: 'Amplience Image Studio',
   tags: ['autodocs'],
+  argTypes: {},
+  render: () => {
+    return document.createElement('div');
+  },
+};
+
+export default meta;
+type Story = StoryObj;
+
+export const TryMe: Story = {
+  args: {
+    provider: {
+      token: 'Bearer-Token-Here',
+      serviceUrl: 'https://graphql-gateway.amplience-qa.net/graphql',
+    },
+    imageUrl:
+      'https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8',
+    options: {
+      baseUrl: 'https://app.amplience-qa.net/image-studio/',
+    },
+  },
   render: (args) => {
     const wrapper = document.createElement('div');
     wrapper.style.display = 'grid';
@@ -35,10 +56,10 @@ const meta: Meta<AmplienceImageStudioProps> = {
       const tempFileResponse: FileServiceResponse = await fileService.createTempFromUrl(
         args.imageUrl,
       );
-      const getImageOptions: LaunchImageStudioOptions = {
+      const launchOptions: LaunchImageStudioOptions = {
         srcImageUrl: tempFileResponse?.url,
       };
-      imageStudio.launch(getImageOptions).then(
+      imageStudio.launch(launchOptions).then(
         (result) => {
           switch(result.reason) {
             case ImageStudioReason.IMAGE:
@@ -62,24 +83,6 @@ const meta: Meta<AmplienceImageStudioProps> = {
     const text = document.createTextNode('');
     wrapper.appendChild(text);
     return wrapper;
-  },
-  argTypes: {},
-};
-
-export default meta;
-type Story = StoryObj;
-
-export const TryMe: Story = {
-  args: {
-    provider: {
-      token: 'Bearer-Token-Here',
-      serviceUrl: 'https://graphql-gateway.amplience-qa.net/graphql',
-    },
-    imageUrl:
-      'https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8',
-    options: {
-      baseUrl: 'https://app.amplience-qa.net/image-studio/',
-    },
   },
 };
 
