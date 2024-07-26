@@ -31,13 +31,6 @@ export class AmplienceImageStudio {
   }
 }
 
-interface MessageData {
-  extensionMeta?: boolean;
-  srcImageUrl?: string;
-  srcImageName?: string;
-  focus?: boolean;
-}
-
 class AmplienceImageStudioInstance<T> {
   public promise: Promise<T>;
   private _resolve?: (result: T) => void;
@@ -115,7 +108,7 @@ class AmplienceImageStudioInstance<T> {
     message.inputImageUrl = this.launchOptions?.image.url;
     message.inputImageName = this.launchOptions?.image.name;
     message.focus = true;
-    
+
     this.sendSDKEvent(message);
   }
 
