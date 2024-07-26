@@ -58,8 +58,10 @@ export const TryMe: Story = {
         args.imageUrl,
       );
       const launchOptions: LaunchImageStudioOptions = {
-        srcImageUrl: tempFileResponse?.url,
-        srcName: args.imageName,
+        image: {
+          url: tempFileResponse?.url,
+          name: args.imageName,
+        }
       };
       imageStudio.launch(launchOptions).then(
         (result) => {
@@ -110,8 +112,10 @@ export const CloseWithoutSendingImage: Story = {
     const fileService = new FileService(fetchProvider);
     const tempFileResponse: FileServiceResponse = await fileService.createTempFromUrl('https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8');
     const getImageOptions: LaunchImageStudioOptions = {
-      srcImageUrl: tempFileResponse?.url,
-      srcName: 'TestImageName'
+      image: {
+        url: tempFileResponse?.url,
+        name: 'TestImageName'
+      }
     };
     const imageStudio = new AmplienceImageStudio({
       baseUrl: 'https://qa-mandelbrot-image-studio.amplience-qa.net/image-studio/',
@@ -128,8 +132,10 @@ export const SaveImageToContentForm: Story = {
     const fileService = new FileService(fetchProvider);
     const tempFileResponse: FileServiceResponse = await fileService.createTempFromUrl('https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8');
     const getImageOptions: LaunchImageStudioOptions = {
-      srcImageUrl: tempFileResponse?.url,
-      srcName: 'DO-NOT-CHANGE-ME'
+      image: {
+        url: tempFileResponse?.url,
+        name: 'DO-NOT-CHANGE-ME'
+      }
     };
     const imageStudio = new AmplienceImageStudio({
       baseUrl: 'https://qa-mandelbrot-image-studio.amplience-qa.net/image-studio/',

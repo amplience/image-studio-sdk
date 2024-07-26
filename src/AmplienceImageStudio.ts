@@ -1,16 +1,18 @@
-import { ImageStudioLaunchResponse, SDKEvent, ImageStudioReason, ImageStudioEvent } from "./types";
+import { ApplicationBlockedError } from "./errors";
+import { ImageStudioLaunchResponse, SDKEvent, ImageStudioReason, ImageStudioEvent, ImageExport } from "./types";
 
 export type AmplienceImageStudioOptions = {
   baseUrl: string;
 
   windowTarget?: string;
   windowFeatures?: string;
-  modalContainer?: string;
 };
 
 export type LaunchImageStudioOptions = {
-  srcImageUrl: string;
-  srcName: string;
+  image: {
+    url: string;
+    name: string;
+  }  
 };
 
 export class AmplienceImageStudio {
@@ -41,79 +43,89 @@ class AmplienceImageStudioInstance<T> {
   private _resolve?: (result: T) => void;
   private _reject?: (reason: Error) => void;
 
-  protected imageOptions: LaunchImageStudioOptions | undefined;
+  protected launchOptions: LaunchImageStudioOptions | undefined;
 
   protected isActive = false;
   protected instanceWindow: Window | undefined;
 
-  protected pollingInterval: NodeJS.Timeout | undefined;
+  protected pollingInterval: number | undefined;
 
   constructor(protected options: AmplienceImageStudioOptions) {
+    this.handleEvent = this.handleEvent.bind(this);
     this.promise = new Promise((resolve, reject) => {
       this._resolve = resolve;
       this._reject = reject;
     });
   }
 
-  launch(imageOptions: LaunchImageStudioOptions) {
+  launch(launchOptions: LaunchImageStudioOptions) {
+    this.launchOptions = launchOptions;    
+
     const {
       baseUrl,
       windowTarget = '_blank',
-      windowFeatures = 'popup=true,status=false,location=false,toolbar=false,menubar=false',
-    }: AmplienceImageStudioOptions = this.options;
+      windowFeatures,
+    } = this.options;
 
     const newWindow = window.open(baseUrl, windowTarget, windowFeatures);
     if (!newWindow) {
-      this.reject(new Error('Image-Studio failed to launch'));
-      return;
-    }
+      this.reject(new ApplicationBlockedError());
+    } else {
+      this.instanceWindow = newWindow;    
+      window.addEventListener('message', this.handleEvent);
+      newWindow.focus();
 
-    this.instanceWindow = newWindow;
-    this.imageOptions = imageOptions;
-    newWindow.focus();
-
-    /**
-     * Interval to check for a closed image studio
-     * When the window is closed, resolve with a CLOSED response
-     */
-    this.pollingInterval = setInterval(() => {
-      if (newWindow.closed) {
-        this.resolve({ 
-          reason: ImageStudioReason.CLOSED
-        } as T);
-        this.deactivate();
-      }
-    }, 100);
-
-    window.addEventListener('message', this.imageStudioMessageListener.bind(this));
+      /**
+       * Interval to check for a closed image studio
+       * When the window is closed, resolve with a CLOSED response
+       */
+      this.pollingInterval = window.setInterval(() => {
+        if (newWindow.closed) {
+          this.deactivate();
+          this.resolve({ 
+            reason: ImageStudioReason.CLOSED
+          } as T);
+        }
+      }, 100);
+    }    
   }
 
-  protected imageStudioMessageListener(event: ImageStudioEvent) {
+  protected handleEvent(event: ImageStudioEvent) {
     if (event.data?.exportImageInfo) {
-      this.resolve({
-        reason: ImageStudioReason.IMAGE,
-        imageInfo: {
-          url: event.data?.exportImageInfo.newImageUrl,
-          name: event.data?.exportImageInfo.newImageName,
-        }
-      } as T);
-      this.deactivate();
+      this.handleExportedImage(event.data?.exportImageInfo);
     }
 
-    if (event.data?.connect && !this.isActive) {
-      this.isActive = true;
-      // on connection, submit the srcImageUrl and extension metadata.
-      this.sendSDKEvent({
-        extensionMeta: true,
-        srcImageUrl: this.imageOptions?.srcImageUrl,
-        srcImageName: this.imageOptions?.srcName,
-        // focus: true
-      });
+    if (event.data?.connect && !this.isActive) {      
+      this.handleActivate();
     }
 
     if (event.data.disconnect && this.isActive) {
       this.isActive = false; // window closure is handled by the interval above
     }
+  }
+
+  private handleActivate() {
+    this.isActive = true;
+    // on connection, submit the srcImageUrl and extension metadata.
+    this.sendSDKEvent({
+      extensionMeta: true,
+      srcImageUrl: this.launchOptions?.image.url,
+      srcImageName: this.launchOptions?.image.name,
+      // focus: true
+    });
+  }
+
+  private handleExportedImage(imageExport: ImageExport) {
+    this.resolve({
+      reason: ImageStudioReason.IMAGE,
+      image: {
+        url: imageExport.newImageUrl,
+        name: imageExport.newImageName,
+      }
+    } as T);
+
+    // close image-studio once we receive an image
+    this.deactivate();
   }
 
   protected sendSDKEvent(messageData: MessageData) {
@@ -143,6 +155,7 @@ class AmplienceImageStudioInstance<T> {
   }
 
   deactivate() {
+    window.removeEventListener("message", this.handleEvent);
     if (this.instanceWindow) {
       this.instanceWindow.close();
     }

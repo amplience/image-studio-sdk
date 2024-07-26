@@ -7,13 +7,15 @@ export interface SDKEvent {
     focus?: boolean;
   }
   
+  export interface ImageExport {
+      newImageUrl: string;
+      newImageName: string;
+  }
+
   export interface ImageStudioEvent {
     data: {
       connect?: boolean;
       disconnect?: boolean;
-      exportImageInfo?: {
-        newImageUrl: string;
-        newImageName: string;
-      }
+      exportImageInfo?: ImageExport
     };
   }
