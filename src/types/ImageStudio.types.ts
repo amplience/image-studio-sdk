@@ -11,5 +11,8 @@ export enum ImageStudioReason {
  */
 export type ImageStudioLaunchResponse = {
   reason: ImageStudioReason;
-  url?: string;
+  image?: {
+    url: string;
+    name: string;
+  };
 };

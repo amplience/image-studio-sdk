@@ -9,8 +9,11 @@ export interface SDKEvent {
   
   export interface ImageStudioEvent {
     data: {
-      exportImageUrl?: string;
       connect?: boolean;
       disconnect?: boolean;
+      exportImageInfo?: {
+        newImageUrl: string;
+        newImageName: string;
+      }
     };
   }

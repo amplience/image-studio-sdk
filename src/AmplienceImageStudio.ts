@@ -89,10 +89,13 @@ class AmplienceImageStudioInstance<T> {
   }
 
   protected imageStudioMessageListener(event: ImageStudioEvent) {
-    if (event.data?.exportImageUrl) {
+    if (event.data?.exportImageInfo) {
       this.resolve({
         reason: ImageStudioReason.IMAGE,
-        url: event.data?.exportImageUrl,
+        imageInfo: {
+          url: event.data?.exportImageInfo.newImageUrl,
+          name: event.data?.exportImageInfo.newImageName,
+        }
       } as T);
       this.deactivate();
     }
@@ -103,7 +106,8 @@ class AmplienceImageStudioInstance<T> {
       this.sendSDKEvent({
         extensionMeta: true,
         srcImageUrl: this.imageOptions?.srcImageUrl,
-        srcImageName: this.imageOptions?.srcName
+        srcImageName: this.imageOptions?.srcName,
+        // focus: true
       });
     }
 

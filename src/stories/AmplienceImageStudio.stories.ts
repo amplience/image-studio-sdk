@@ -39,13 +39,13 @@ export const TryMe: Story = {
       'https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8',
     imageName: 'TestImageName',
     options: {
-      baseUrl: 'https://app.amplience-qa.net/image-studio/',
+      baseUrl: 'https://qa-mandelbrot-image-studio.amplience-qa.net/image-studio/',
     },
   },
   render: (args) => {
     const wrapper = document.createElement('div');
-    wrapper.style.display = 'grid';
-    wrapper.style.justifyContent = 'center';
+    wrapper.style.display = 'flex';
+    wrapper.style.flexDirection = 'column';
     wrapper.style.alignItems = 'center';
 
     const imageStudio = new AmplienceImageStudio(args.options);
@@ -63,27 +63,43 @@ export const TryMe: Story = {
       };
       imageStudio.launch(launchOptions).then(
         (result) => {
-          switch(result.reason) {
+          switch(result?.reason) {
             case ImageStudioReason.IMAGE:
-              text.nodeValue = result?.url ?? '';
+              if(result?.image) {
+                nameText.nodeValue = result.image.name;
+                urlText.nodeValue = result.image.url;
+              } else {
+                nameText.nodeValue = 'Unexpected Response Format';
+                urlText.nodeValue = '';
+              }              
               break;
             case ImageStudioReason.CLOSED:
-              text.nodeValue = 'Closed without Image';
+              nameText.nodeValue = 'Closed without Image';
+              urlText.nodeValue = '';
               break;
             default:
-              text.nodeValue = 'Unknown Image Studio Reason';
+              nameText.nodeValue = 'Unknown Image Studio Reason';
+              urlText.nodeValue = '';
               break;
           }
         },
         (error) => {
-          text.nodeValue = `Failed with error: ${error}`;
+          nameText.nodeValue = `Failed with error: ${error}`;
+          urlText.nodeValue = '';
         },
       );
     };
     wrapper.appendChild(launch);
 
-    const text = document.createTextNode('');
-    wrapper.appendChild(text);
+    const nameText = document.createTextNode('');
+    wrapper.appendChild(nameText);
+
+    const br = document.createElement('br');
+    wrapper.appendChild(br);
+
+    const urlText = document.createTextNode('');
+    wrapper.appendChild(urlText);
+
     return wrapper;
   },
 };
@@ -98,7 +114,7 @@ export const CloseWithoutSendingImage: Story = {
       srcName: 'TestImageName'
     };
     const imageStudio = new AmplienceImageStudio({
-      baseUrl: 'https://app.amplience-qa.net/image-studio/',
+      baseUrl: 'https://qa-mandelbrot-image-studio.amplience-qa.net/image-studio/',
     });
     const response = await imageStudio.launch(getImageOptions);
 
@@ -113,14 +129,15 @@ export const SaveImageToContentForm: Story = {
     const tempFileResponse: FileServiceResponse = await fileService.createTempFromUrl('https://thumbs.amplience-qa.net/r/a124da68-5b5d-46a7-94dc-13a4c45976f8');
     const getImageOptions: LaunchImageStudioOptions = {
       srcImageUrl: tempFileResponse?.url,
-      srcName: 'TestImageName'
+      srcName: 'DO-NOT-CHANGE-ME'
     };
     const imageStudio = new AmplienceImageStudio({
-      baseUrl: 'https://app.amplience-qa.net/image-studio/',
+      baseUrl: 'https://qa-mandelbrot-image-studio.amplience-qa.net/image-studio/',
     });
     const response = await imageStudio.launch(getImageOptions);
 
     expect(response?.reason).toBe(ImageStudioReason.IMAGE);
-    expect(response?.url).not.toBe(tempFileResponse?.url);
+    expect(response?.image?.url).not.toBe(tempFileResponse?.url);
+    expect(response?.image?.name).toBe('DO-NOT-CHANGE-ME');
   },
 };
