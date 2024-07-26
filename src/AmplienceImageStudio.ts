@@ -106,13 +106,17 @@ class AmplienceImageStudioInstance<T> {
 
   private handleActivate() {
     this.isActive = true;
-    // on connection, submit the srcImageUrl and extension metadata.
-    this.sendSDKEvent({
-      extensionMeta: true,
-      srcImageUrl: this.launchOptions?.image.url,
-      srcImageName: this.launchOptions?.image.name,
-      // focus: true
-    });
+
+    // on connection/activation, submit the activation message.
+    const message: SDKEvent = {};
+    message.extensionMeta = {
+      exportContext: 'Content Form',
+    };
+    message.inputImageUrl = this.launchOptions?.image.url;
+    message.inputImageName = this.launchOptions?.image.name;
+    message.focus = true;
+    
+    this.sendSDKEvent(message);
   }
 
   private handleExportedImage(imageExport: ImageExport) {
@@ -128,29 +132,9 @@ class AmplienceImageStudioInstance<T> {
     this.deactivate();
   }
 
-  protected sendSDKEvent(messageData: MessageData) {
+  protected sendSDKEvent(event: SDKEvent) {
     if (this.instanceWindow) {
-      // process sending messages
-      const message: SDKEvent = {};
-      if ('extensionMeta' in messageData) {
-        message.extensionMeta = {
-          exportContext: 'Content Form',
-        };
-      }
-
-      if ('srcImageUrl' in messageData) {
-        message.inputImageUrl = messageData.srcImageUrl;
-      }
-
-      if ('srcImageName' in messageData) {
-        message.inputImageName = messageData.srcImageName;
-      }
-
-      if ('focus' in messageData) {
-        message.focus = true;
-      }
-
-      this.instanceWindow.postMessage(message, this.options.baseUrl);
+      this.instanceWindow.postMessage(event, this.options.baseUrl);
     }
   }
 
