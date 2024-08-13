@@ -125,7 +125,7 @@ class AmplienceImageStudioInstance<T> {
     this.deactivate();
   }
 
-  protected sendSDKEvent(event: SDKEvent) {
+  private sendSDKEvent(event: SDKEvent) {
     if (this.instanceWindow) {
       this.instanceWindow.postMessage(event, this.options.baseUrl);
     }

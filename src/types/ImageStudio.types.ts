@@ -6,13 +6,15 @@ export enum ImageStudioReason {
   CLOSED,
 }
 
+export type ImageResponse = {
+  url: string;
+  name: string;
+}
+
 /**
  * Image Studio launch response
  */
 export type ImageStudioLaunchResponse = {
   reason: ImageStudioReason;
-  image?: {
-    url: string;
-    name: string;
-  };
+  image?: ImageResponse;
 };

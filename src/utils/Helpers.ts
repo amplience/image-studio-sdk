@@ -1,4 +1,4 @@
-export const getFileExtensionFromMimeType = (
+export const mimeTypeToFileExtension = (
     mimeType: string | null,
   ): string | undefined => {
     switch (mimeType) {
