@@ -7,7 +7,7 @@ export enum ImageStudioReason {
 }
 
 /**
- * ImageStudio.launch response
+ * Image Studio launch response
  */
 export type ImageStudioLaunchResponse = {
   reason: ImageStudioReason;
