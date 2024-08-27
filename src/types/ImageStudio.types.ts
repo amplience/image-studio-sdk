@@ -1,5 +1,5 @@
 /**
- * USed to capture the Promise resolution reason
+ * Used to capture the Promise resolution reason
  */
 export enum ImageStudioReason {
   IMAGE,
