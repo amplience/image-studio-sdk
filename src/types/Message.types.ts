@@ -1,21 +1,18 @@
-export interface SDKEvent {
-    extensionMeta?: {
-      exportContext: string;
-    };
-    inputImageUrl?: string;
-    inputImageName?: string;
-    focus?: boolean;
-  }
-  
-  export interface ImageExport {
-      newImageUrl: string;
-      newImageName: string;
-  }
+export interface SDKImage {
+  url: string;
+  name: string;
+}
 
-  export interface ImageStudioEvent {
-    data: {
-      connect?: boolean;
-      disconnect?: boolean;
-      exportImageInfo?: ImageExport
-    };
-  }
+export interface SDKEvent {
+  extensionMeta?: {
+    exportContext: string;
+  };
+  inputImages?: SDKImage[];
+  focus?: boolean;
+}
+
+export interface ImageStudioEvent {
+  connect?: boolean;
+  disconnect?: boolean;
+  exportImageInfo?: SDKImage;
+}

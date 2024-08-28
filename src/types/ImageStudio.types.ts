@@ -9,12 +9,12 @@ export enum ImageStudioReason {
 export type ImageResponse = {
   url: string;
   name: string;
-}
+};
 
 /**
  * Image Studio launch response
  */
-export type ImageStudioLaunchResponse = {
+export type ImageStudioResponse = {
   reason: ImageStudioReason;
   image?: ImageResponse;
 };

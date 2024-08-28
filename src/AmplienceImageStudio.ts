@@ -1,5 +1,11 @@
-import { ApplicationBlockedError } from "./errors";
-import { ImageStudioLaunchResponse, SDKEvent, ImageStudioReason, ImageStudioEvent, ImageExport } from "./types";
+import { ApplicationBlockedError } from './errors';
+import {
+  ImageStudioResponse,
+  SDKEvent,
+  ImageStudioReason,
+  ImageStudioEvent,
+  SDKImage,
+} from './types';
 
 export type AmplienceImageStudioOptions = {
   baseUrl: string;
@@ -8,22 +14,17 @@ export type AmplienceImageStudioOptions = {
   windowFeatures?: string;
 };
 
-export type LaunchImageStudioOptions = {
-  image: {
-    url: string;
-    name: string;
-  }  
-};
-
 export class AmplienceImageStudio {
   constructor(protected options: AmplienceImageStudioOptions) {}
 
-  public launch(
-    options: LaunchImageStudioOptions,
-  ): Promise<ImageStudioLaunchResponse> {
-    const instance = this.createInstance<ImageStudioLaunchResponse>();
-    instance.launch(options);
-    return instance.promise;
+  public editImages(inputImages: SDKImage[]): Promise<ImageStudioResponse> {
+    const instance = this.createInstance<ImageStudioResponse>();
+    return instance.launch(inputImages);
+  }
+
+  public launch(): Promise<ImageStudioResponse> {
+    const instance = this.createInstance<ImageStudioResponse>();
+    return instance.launch();
   }
 
   private createInstance<T>() {
@@ -32,11 +33,10 @@ export class AmplienceImageStudio {
 }
 
 class AmplienceImageStudioInstance<T> {
-  public promise: Promise<T>;
   private _resolve?: (result: T) => void;
   private _reject?: (reason: Error) => void;
 
-  protected launchOptions: LaunchImageStudioOptions | undefined;
+  protected inputImages?: SDKImage[] | undefined;
 
   protected isActive = false;
   protected instanceWindow: Window | undefined;
@@ -45,26 +45,21 @@ class AmplienceImageStudioInstance<T> {
 
   constructor(protected options: AmplienceImageStudioOptions) {
     this.handleEvent = this.handleEvent.bind(this);
-    this.promise = new Promise((resolve, reject) => {
+  }
+
+  launch(inputImages?: SDKImage[]): Promise<T> {
+    const promise = new Promise<T>((resolve, reject) => {
       this._resolve = resolve;
       this._reject = reject;
     });
-  }
 
-  launch(launchOptions: LaunchImageStudioOptions) {
-    this.launchOptions = launchOptions;    
-
-    const {
-      baseUrl,
-      windowTarget = '_blank',
-      windowFeatures,
-    } = this.options;
+    const { baseUrl, windowTarget = '_blank', windowFeatures } = this.options;
 
     const newWindow = window.open(baseUrl, windowTarget, windowFeatures);
     if (!newWindow) {
       this.reject(new ApplicationBlockedError());
     } else {
-      this.instanceWindow = newWindow;    
+      this.instanceWindow = newWindow;
       window.addEventListener('message', this.handleEvent);
       newWindow.focus();
 
@@ -75,20 +70,24 @@ class AmplienceImageStudioInstance<T> {
       this.pollingInterval = window.setInterval(() => {
         if (newWindow.closed) {
           this.deactivate();
-          this.resolve({ 
-            reason: ImageStudioReason.CLOSED
+          this.resolve({
+            reason: ImageStudioReason.CLOSED,
           } as T);
         }
       }, 100);
-    }    
+
+      this.inputImages = inputImages;
+    }
+
+    return promise;
   }
 
-  protected handleEvent(event: ImageStudioEvent) {
+  protected handleEvent(event: { data: ImageStudioEvent }) {
     if (event.data?.exportImageInfo) {
       this.handleExportedImage(event.data?.exportImageInfo);
     }
 
-    if (event.data?.connect && !this.isActive) {      
+    if (event.data?.connect && !this.isActive) {
       this.handleActivate();
     }
 
@@ -105,20 +104,19 @@ class AmplienceImageStudioInstance<T> {
     message.extensionMeta = {
       exportContext: 'Content Form',
     };
-    message.inputImageUrl = this.launchOptions?.image.url;
-    message.inputImageName = this.launchOptions?.image.name;
+    message.inputImages = this.inputImages;
     message.focus = true;
 
     this.sendSDKEvent(message);
   }
 
-  private handleExportedImage(imageExport: ImageExport) {
+  private handleExportedImage(image: SDKImage) {
     this.resolve({
       reason: ImageStudioReason.IMAGE,
       image: {
-        url: imageExport.newImageUrl,
-        name: imageExport.newImageName,
-      }
+        url: image.url,
+        name: image.name,
+      },
     } as T);
 
     // close image-studio once we receive an image
@@ -132,7 +130,7 @@ class AmplienceImageStudioInstance<T> {
   }
 
   deactivate() {
-    window.removeEventListener("message", this.handleEvent);
+    window.removeEventListener('message', this.handleEvent);
     if (this.instanceWindow) {
       this.instanceWindow.close();
     }
