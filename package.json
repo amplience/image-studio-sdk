@@ -4,6 +4,12 @@
   "type": "module",
   "license": "Apache-2.0",
   "description": "Image Studio SDK",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amplience/image-studio-sdk.git"
+  },
+  "main": "dist/cjs/index.js",
+  "typings": "dist/cjs/index.d.ts",
   "exports": {
     "import": {
       "types": "./dist/esm/index.d.ts",
@@ -17,17 +23,22 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm-run-all clean build:cjs build:esm",
-    "build:cjs": "tsc --project tsconfig.json --module commonjs --outDir ./dist/cjs/",
-    "build:esm": "tsc --project tsconfig.json --module es2022 --outDir ./dist/esm/",
+    "build:cjs": "tsc --project tsconfig.json --outdir ./dist/cjs/",
+    "build:esm": "tsc --project tsconfig.json --module es2022 --outdir ./dist/esm/",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "fix": "eslint . --fix --ext .ts",
     "lint": "eslint . --ext .ts --max-warnings 0"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "keywords": [],
   "author": "",
   "devDependencies": {
-    "@amplience/gql-ai-sdk": "1.1.2--canary.14.4b4a614.0",
+    "@amplience/gql-ai-sdk": "1.2.5",
     "@chromatic-com/storybook": "^1.6.1",
     "@storybook/addon-essentials": "^8.2.1",
     "@storybook/addon-interactions": "^8.2.1",
