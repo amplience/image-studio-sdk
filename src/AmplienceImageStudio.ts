@@ -101,8 +101,9 @@ class AmplienceImageStudioInstance<T> {
 
     // on connection/activation, submit the activation message.
     const message: SDKEvent = {};
-    message.extensionMeta = {
-      exportContext: 'Content Form',
+    message.sdkMetadata = {
+      allowImageSave: true,
+      allowLogout: false,
     };
     message.inputImages = this.inputImages;
     message.focus = true;

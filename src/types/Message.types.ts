@@ -3,10 +3,13 @@ export interface SDKImage {
   name: string;
 }
 
+export interface SDKMetadata {
+  allowImageSave: boolean;
+  allowLogout: boolean;
+}
+
 export interface SDKEvent {
-  extensionMeta?: {
-    exportContext: string;
-  };
+  sdkMetadata?: SDKMetadata;
   inputImages?: SDKImage[];
   focus?: boolean;
 }
