@@ -11,8 +11,9 @@ interface Entitlement {
   value: boolean;
 }
 
-export const checkEntitlement = (entitlement: Entitlement) => {
+export const checkEntitlement = (entitlement: Entitlement | null) => {
   return (
+    entitlement != null &&
     entitlement.name === 'image-studio-enabled' &&
     entitlement.type === 'boolean' &&
     entitlement.value === true
@@ -48,9 +49,11 @@ const orgHasEntitlement = async (
   if (org && 'plans' in org) {
     // Check entitlements associated with plans
     for (const plan of org.plans ?? []) {
-      for (const entitlement of plan.entitlements ?? []) {
-        if (checkEntitlement(entitlement)) {
-          return true;
+      if (plan != null) {
+        for (const entitlement of plan.entitlements ?? []) {
+          if (checkEntitlement(entitlement)) {
+            return true;
+          }
         }
       }
     }
