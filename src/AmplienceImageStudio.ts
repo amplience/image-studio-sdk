@@ -5,6 +5,7 @@ import {
   ImageStudioReason,
   ImageStudioEvent,
   SDKImage,
+  SDKMetadata,
 } from './types';
 
 export type AmplienceImageStudioOptions = {
@@ -17,14 +18,36 @@ export type AmplienceImageStudioOptions = {
 export class AmplienceImageStudio {
   constructor(protected options: AmplienceImageStudioOptions) {}
 
+  /**
+   * launches image studio to edit the images
+   * supports sending images back to the SDK and prevents the user from logging out
+   * @returns promise containing the studios response on closure
+   */
   public editImages(inputImages: SDKImage[]): Promise<ImageStudioResponse> {
     const instance = this.createInstance<ImageStudioResponse>();
-    return instance.launch(inputImages);
+    return instance.launch(
+      {
+        allowImageSave: true,
+        allowLogout: false,
+      },
+      inputImages,
+    );
   }
 
+  /**
+   * launches image studio standalone
+   * does not support sending images back to the SDK and allows the user to logout
+   * @returns promise that contains the studios response on closure
+   */
   public launch(): Promise<ImageStudioResponse> {
     const instance = this.createInstance<ImageStudioResponse>();
-    return instance.launch();
+    return instance.launch(
+      {
+        allowImageSave: false,
+        allowLogout: true,
+      },
+      [],
+    );
   }
 
   private createInstance<T>() {
@@ -36,7 +59,10 @@ class AmplienceImageStudioInstance<T> {
   private _resolve?: (result: T) => void;
   private _reject?: (reason: Error) => void;
 
-  protected inputImages?: SDKImage[] | undefined;
+  private launchProps: {
+    sdkMetadata: SDKMetadata;
+    inputImages: SDKImage[];
+  };
 
   protected isActive = false;
   protected instanceWindow: Window | undefined;
@@ -47,7 +73,7 @@ class AmplienceImageStudioInstance<T> {
     this.handleEvent = this.handleEvent.bind(this);
   }
 
-  launch(inputImages?: SDKImage[]): Promise<T> {
+  launch(sdkMetadata: SDKMetadata, inputImages: SDKImage[]): Promise<T> {
     const promise = new Promise<T>((resolve, reject) => {
       this._resolve = resolve;
       this._reject = reject;
@@ -59,12 +85,17 @@ class AmplienceImageStudioInstance<T> {
     if (!newWindow) {
       this.reject(new ApplicationBlockedError());
     } else {
+      this.launchProps = {
+        sdkMetadata,
+        inputImages,
+      };
+
       this.instanceWindow = newWindow;
       window.addEventListener('message', this.handleEvent);
       newWindow.focus();
 
       /**
-       * Interval to check for a closed image studio
+       * Interval to check for closure of image studio
        * When the window is closed, resolve with a CLOSED response
        */
       this.pollingInterval = window.setInterval(() => {
@@ -75,8 +106,6 @@ class AmplienceImageStudioInstance<T> {
           } as T);
         }
       }, 100);
-
-      this.inputImages = inputImages;
     }
 
     return promise;
@@ -99,13 +128,10 @@ class AmplienceImageStudioInstance<T> {
   private handleActivate() {
     this.isActive = true;
 
-    // on connection/activation, submit the activation message.
+    // on connection/activation, submit the metadata and any input images.
     const message: SDKEvent = {};
-    message.sdkMetadata = {
-      allowImageSave: true,
-      allowLogout: false,
-    };
-    message.inputImages = this.inputImages;
+    message.sdkMetadata = this.launchProps.sdkMetadata;
+    message.inputImages = this.launchProps.inputImages;
     message.focus = true;
 
     this.sendSDKEvent(message);

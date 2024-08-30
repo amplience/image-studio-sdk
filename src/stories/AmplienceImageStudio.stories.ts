@@ -115,7 +115,7 @@ export const TryMe: Story = {
   },
 };
 
-export const CloseWithoutSendingImage: Story = {
+export const EditImages_CloseWithoutSendingImage: Story = {
   play: async () => {
     const fetchProvider = new FetchProvider(
       'https://graphql-gateway.amplience-qa.net/graphql',
@@ -140,7 +140,7 @@ export const CloseWithoutSendingImage: Story = {
   },
 };
 
-export const SaveImageToContentForm: Story = {
+export const EditImages_SaveImageToContentForm: Story = {
   play: async () => {
     const fetchProvider = new FetchProvider(
       'https://graphql-gateway.amplience-qa.net/graphql',
@@ -166,7 +166,7 @@ export const SaveImageToContentForm: Story = {
   },
 };
 
-export const LaunchWithoutImage: Story = {
+export const LaunchStandalone: Story = {
   play: async () => {
     const imageStudio = new AmplienceImageStudio({
       baseUrl: IMAGE_STUDIO_URL,

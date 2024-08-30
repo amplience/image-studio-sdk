@@ -1,20 +1,23 @@
 /**
- * Used to capture the Promise resolution reason
+ * Reason for promise resolution
  */
 export enum ImageStudioReason {
   IMAGE,
   CLOSED,
 }
 
-export type ImageResponse = {
+/**
+ * container interface for image representation
+ */
+export interface SDKImage {
   url: string;
   name: string;
-};
+}
 
 /**
  * Image Studio launch response
  */
 export type ImageStudioResponse = {
   reason: ImageStudioReason;
-  image?: ImageResponse;
+  image?: SDKImage;
 };
