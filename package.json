@@ -38,7 +38,6 @@
   "keywords": [],
   "author": "",
   "devDependencies": {
-    "@amplience/gql-ai-sdk": "1.2.5",
     "@chromatic-com/storybook": "^1.6.1",
     "@storybook/addon-essentials": "^8.2.1",
     "@storybook/addon-interactions": "^8.2.1",

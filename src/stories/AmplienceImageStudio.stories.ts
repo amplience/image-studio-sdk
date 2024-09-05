@@ -1,17 +1,10 @@
 import { StoryObj, Meta } from '@storybook/html';
 import { expect } from '@storybook/test';
 import {
-  FetchProvider,
-  FileService,
-  FileServiceResponse,
-} from '@amplience/gql-ai-sdk';
-import {
   AmplienceImageStudio,
   AmplienceImageStudioOptions,
 } from '../AmplienceImageStudio';
 import { ImageStudioReason, SDKImage } from '../types';
-
-import surfWomanImage from './assets/surf_woman.jpg';
 
 const IMAGE_STUDIO_URL = 'http://localhost:5173/image-studio/';
 // const IMAGE_STUDIO_URL = 'https://app.amplience-qa.net/image-studio/';
@@ -39,13 +32,9 @@ type Story = StoryObj;
 
 export const TryMe: Story = {
   args: {
-    provider: {
-      token: 'Bearer-Token-Here',
-      serviceUrl: 'https://graphql-gateway.amplience-qa.net/graphql',
-    },
     imageUrl:
       'https://thumbs.amplience-qa.net/r/53ac8ad8-b4a5-40a2-a613-d10a9ef0c225',
-    imageName: 'TestImageName',
+    imageName: 'elephant-wild-t',
     options: {
       baseUrl: IMAGE_STUDIO_URL,
     },
@@ -60,15 +49,9 @@ export const TryMe: Story = {
     const launch = document.createElement('button');
     launch.innerText = 'Launch';
     launch.onclick = async () => {
-      const fetchProvider = new FetchProvider(
-        args.provider.serviceUrl,
-      ).withToken(args.provider.token);
-      const fileService = new FileService(fetchProvider);
-      const tempFileResponse: FileServiceResponse =
-        await fileService.createTempFromUrl(args.imageUrl);
       const inputImages: SDKImage[] = [
         {
-          url: tempFileResponse?.url,
+          url: args.imageUrl,
           name: args.imageName,
         },
       ];
@@ -117,18 +100,10 @@ export const TryMe: Story = {
 
 export const EditImages_CloseWithoutSendingImage: Story = {
   play: async () => {
-    const fetchProvider = new FetchProvider(
-      'https://graphql-gateway.amplience-qa.net/graphql',
-    ).withToken('Bearer-Token-Here');
-    const fileService = new FileService(fetchProvider);
-
-    const image = await fetch(surfWomanImage);
-    const tempFileResponse: FileServiceResponse =
-      await fileService.createTempFromBlob(await image.blob());
     const inputImages: SDKImage[] = [
       {
-        url: tempFileResponse?.url,
-        name: 'TestImageName',
+        url: 'https://thumbs.amplience-qa.net/r/53ac8ad8-b4a5-40a2-a613-d10a9ef0c225',
+        name: 'elephant-wild-t',
       },
     ];
     const imageStudio = new AmplienceImageStudio({
@@ -140,18 +115,11 @@ export const EditImages_CloseWithoutSendingImage: Story = {
   },
 };
 
-export const EditImages_SaveImageToContentForm: Story = {
+export const EditImages_SaveWhitelisedImageToContentForm: Story = {
   play: async () => {
-    const fetchProvider = new FetchProvider(
-      'https://graphql-gateway.amplience-qa.net/graphql',
-    ).withToken('Bearer-Token-Here');
-    const fileService = new FileService(fetchProvider);
-    const image = await fetch(surfWomanImage);
-    const tempFileResponse: FileServiceResponse =
-      await fileService.createTempFromBlob(await image.blob());
     const inputImages: SDKImage[] = [
       {
-        url: tempFileResponse?.url,
+        url: 'https://thumbs.amplience-qa.net/r/53ac8ad8-b4a5-40a2-a613-d10a9ef0c225',
         name: 'DO-NOT-CHANGE-ME',
       },
     ];
@@ -161,7 +129,32 @@ export const EditImages_SaveImageToContentForm: Story = {
     const response = await imageStudio.editImages(inputImages);
 
     expect(response?.reason).toBe(ImageStudioReason.IMAGE);
-    expect(response?.image?.url).toBe(tempFileResponse?.url);
+    // Aslong as the user doesnt make any changes to the image, expected to receive the same URl back as we submitted to the studio
+    expect(response?.image?.url).toBe(
+      'https://thumbs.amplience-qa.net/r/53ac8ad8-b4a5-40a2-a613-d10a9ef0c225',
+    );
+    expect(response?.image?.name).toBe('DO-NOT-CHANGE-ME');
+  },
+};
+
+export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
+  play: async () => {
+    const inputImages: SDKImage[] = [
+      {
+        url: 'https://www.catster.com/wp-content/uploads/2023/11/orange-cat-riding-a-roomba-or-robotic-vacuum_Sharomka_Shutterstock.jpg.webp',
+        name: 'DO-NOT-CHANGE-ME',
+      },
+    ];
+    const imageStudio = new AmplienceImageStudio({
+      baseUrl: IMAGE_STUDIO_URL,
+    });
+    const response = await imageStudio.editImages(inputImages);
+
+    expect(response?.reason).toBe(ImageStudioReason.IMAGE);
+    // Aslong as the user doesnt make any changes to the image, expected to receive the same URl back as we submitted to the studio
+    expect(response?.image?.url).not.toBe(
+      'https://www.catster.com/wp-content/uploads/2023/11/orange-cat-riding-a-roomba-or-robotic-vacuum_Sharomka_Shutterstock.jpg.webp',
+    );
     expect(response?.image?.name).toBe('DO-NOT-CHANGE-ME');
   },
 };
