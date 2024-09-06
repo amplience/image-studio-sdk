@@ -35,6 +35,7 @@ export const TryMe: Story = {
     imageUrl:
       'https://thumbs.amplience-qa.net/r/53ac8ad8-b4a5-40a2-a613-d10a9ef0c225',
     imageName: 'elephant-wild-t',
+    mimeType: 'image/jpeg',
     options: {
       baseUrl: IMAGE_STUDIO_URL,
     },
@@ -53,6 +54,7 @@ export const TryMe: Story = {
         {
           url: args.imageUrl,
           name: args.imageName,
+          mimeType: args.mimeType,
         },
       ];
       imageStudio.editImages(inputImages).then(
@@ -62,24 +64,29 @@ export const TryMe: Story = {
               if (result?.image) {
                 nameText.nodeValue = result.image.name;
                 urlText.nodeValue = result.image.url;
+                mimeTypeText.nodeValue = result.image.mimeType;
               } else {
                 nameText.nodeValue = 'Unexpected Response Format';
                 urlText.nodeValue = '';
+                mimeTypeText.nodeValue = '';
               }
               break;
             case ImageStudioReason.CLOSED:
               nameText.nodeValue = 'Closed without Image';
               urlText.nodeValue = '';
+              mimeTypeText.nodeValue = '';
               break;
             default:
               nameText.nodeValue = 'Unknown Image Studio Reason';
               urlText.nodeValue = '';
+              mimeTypeText.nodeValue = '';
               break;
           }
         },
         (error) => {
           nameText.nodeValue = `Failed with error: ${error}`;
           urlText.nodeValue = '';
+          mimeTypeText.nodeValue = '';
         },
       );
     };
@@ -88,8 +95,12 @@ export const TryMe: Story = {
     const nameText = document.createTextNode('');
     wrapper.appendChild(nameText);
 
-    const br = document.createElement('br');
-    wrapper.appendChild(br);
+    wrapper.appendChild(document.createElement('br'));
+
+    const mimeTypeText = document.createTextNode('');
+    wrapper.appendChild(mimeTypeText);
+
+    wrapper.appendChild(document.createElement('br'));
 
     const urlText = document.createTextNode('');
     wrapper.appendChild(urlText);
@@ -104,6 +115,7 @@ export const EditImages_CloseWithoutSendingImage: Story = {
       {
         url: 'https://thumbs.amplience-qa.net/r/53ac8ad8-b4a5-40a2-a613-d10a9ef0c225',
         name: 'elephant-wild-t',
+        mimeType: 'image/jpeg',
       },
     ];
     const imageStudio = new AmplienceImageStudio({
@@ -121,6 +133,7 @@ export const EditImages_SaveWhitelisedImageToContentForm: Story = {
       {
         url: 'https://thumbs.amplience-qa.net/r/53ac8ad8-b4a5-40a2-a613-d10a9ef0c225',
         name: 'DO-NOT-CHANGE-ME',
+        mimeType: 'image/jpeg',
       },
     ];
     const imageStudio = new AmplienceImageStudio({
@@ -134,6 +147,7 @@ export const EditImages_SaveWhitelisedImageToContentForm: Story = {
       'https://thumbs.amplience-qa.net/r/53ac8ad8-b4a5-40a2-a613-d10a9ef0c225',
     );
     expect(response?.image?.name).toBe('DO-NOT-CHANGE-ME');
+    expect(response?.image?.mimeType).toBe('image/jpeg');
   },
 };
 
@@ -143,6 +157,7 @@ export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
       {
         url: 'https://www.catster.com/wp-content/uploads/2023/11/orange-cat-riding-a-roomba-or-robotic-vacuum_Sharomka_Shutterstock.jpg.webp',
         name: 'DO-NOT-CHANGE-ME',
+        mimeType: 'image/webp',
       },
     ];
     const imageStudio = new AmplienceImageStudio({
@@ -156,6 +171,7 @@ export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
       'https://www.catster.com/wp-content/uploads/2023/11/orange-cat-riding-a-roomba-or-robotic-vacuum_Sharomka_Shutterstock.jpg.webp',
     );
     expect(response?.image?.name).toBe('DO-NOT-CHANGE-ME');
+    expect(response?.image?.mimeType).toBe('image/webp');
   },
 };
 

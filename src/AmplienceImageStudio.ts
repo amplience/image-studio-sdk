@@ -140,10 +140,7 @@ class AmplienceImageStudioInstance<T> {
   private handleExportedImage(image: SDKImage) {
     this.resolve({
       reason: ImageStudioReason.IMAGE,
-      image: {
-        url: image.url,
-        name: image.name,
-      },
+      image,
     } as T);
 
     // close image-studio once we receive an image

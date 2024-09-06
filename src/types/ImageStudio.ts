@@ -12,6 +12,7 @@ export enum ImageStudioReason {
 export interface SDKImage {
   url: string;
   name: string;
+  mimeType: string;
 }
 
 /**
