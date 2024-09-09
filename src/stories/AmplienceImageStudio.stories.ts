@@ -6,8 +6,7 @@ import {
 } from '../AmplienceImageStudio';
 import { ImageStudioReason, SDKImage } from '../types';
 
-const IMAGE_STUDIO_URL = 'http://localhost:5173/image-studio/';
-// const IMAGE_STUDIO_URL = 'https://app.amplience-qa.net/image-studio/';
+const IMAGE_STUDIO_URL = 'https://app.amplience.net/image-studio/';
 
 interface AmplienceImageStudioProps {
   imageUrl: string;
