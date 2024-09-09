@@ -7,7 +7,7 @@ export enum ImageStudioReason {
 }
 
 /**
- * container interface for image representation
+ * Container interface for image representation
  */
 export interface SDKImage {
   url: string;
