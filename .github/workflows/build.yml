@@ -19,4 +19,4 @@ jobs:
           npm ci
           npm run build
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PUBLIC_REPO_PACKAGES_PAT }}
+          CI: true
