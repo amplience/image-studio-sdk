@@ -28,7 +28,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "fix": "eslint . --fix --ext .ts",
-    "lint": "eslint . --ext .ts --max-warnings 0"
+    "lint": "eslint . --ext .ts --max-warnings 0",
+    "prepare": "npm run build"
   },
   "files": [
     "dist",
