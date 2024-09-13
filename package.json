@@ -6,7 +6,7 @@
   "description": "Image Studio SDK",
   "repository": {
     "type": "git",
-    "url": "https://github.com/amplience/image-studio-sdk.git"
+    "url": "git+https://github.com/amplience/image-studio-sdk.git"
   },
   "main": "dist/cjs/index.js",
   "typings": "dist/cjs/index.d.ts",
