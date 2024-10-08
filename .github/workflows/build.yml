@@ -20,14 +20,3 @@ jobs:
           npm run build
         env:
           CI: true
-
-  release:
-    name: Deploy Services
-    needs: [build]
-    permissions:
-      contents: write
-      issues: read
-      packages: write
-      pull-requests: write
-    uses: amplience/github-actions-helper-workflows/.github/workflows/pnpm-release.yml@85a865a6187b7d30b7ad98a0383610d4992e2dd2
-    secrets: inherit
