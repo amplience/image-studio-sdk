@@ -6,7 +6,8 @@ import {
 } from '../AmplienceImageStudio';
 import { ImageStudioReason, SDKImage } from '../types';
 
-const IMAGE_STUDIO_URL = 'https://app.amplience.net/image-studio/';
+const IMAGE_STUDIO_DOMAIN = 'https://app.amplience.net';
+// const IMAGE_STUDIO_DOMAIN = 'http://localhost:5173';
 
 interface AmplienceImageStudioProps {
   imageUrl: string;
@@ -36,7 +37,8 @@ export const TryMe: Story = {
     imageName: 'elephant-wild-t',
     mimeType: 'image/jpeg',
     options: {
-      baseUrl: IMAGE_STUDIO_URL,
+      domain: IMAGE_STUDIO_DOMAIN,
+      sdkMetadataOverride: {},
     },
   },
   render: (args) => {
@@ -118,7 +120,7 @@ export const EditImages_CloseWithoutSendingImage: Story = {
       },
     ];
     const imageStudio = new AmplienceImageStudio({
-      baseUrl: IMAGE_STUDIO_URL,
+      domain: IMAGE_STUDIO_DOMAIN,
     });
     const response = await imageStudio.editImages(inputImages);
 
@@ -136,7 +138,7 @@ export const EditImages_SaveWhitelisedImageToContentForm: Story = {
       },
     ];
     const imageStudio = new AmplienceImageStudio({
-      baseUrl: IMAGE_STUDIO_URL,
+      domain: IMAGE_STUDIO_DOMAIN,
     });
     const response = await imageStudio.editImages(inputImages);
 
@@ -160,7 +162,7 @@ export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
       },
     ];
     const imageStudio = new AmplienceImageStudio({
-      baseUrl: IMAGE_STUDIO_URL,
+      domain: IMAGE_STUDIO_DOMAIN,
     });
     const response = await imageStudio.editImages(inputImages);
 
@@ -177,7 +179,7 @@ export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
 export const LaunchStandalone: Story = {
   play: async () => {
     const imageStudio = new AmplienceImageStudio({
-      baseUrl: IMAGE_STUDIO_URL,
+      domain: IMAGE_STUDIO_DOMAIN,
     });
     const response = await imageStudio.launch();
     expect(response?.reason).toBe(ImageStudioReason.CLOSED);
