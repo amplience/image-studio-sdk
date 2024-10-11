@@ -136,6 +136,7 @@ export const EditImages_SaveWhitelisedImageToContentForm: Story = {
         mimeType: 'image/jpeg',
       },
     ];
+
     const imageStudio = new AmplienceImageStudio({
       baseUrl: IMAGE_STUDIO_URL,
     });
