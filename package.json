@@ -36,7 +36,6 @@
     "CHANGELOG.md"
   ],
   "keywords": [],
-  "author": "Amp Automation <opssupport@amplience.com>",
   "devDependencies": {
     "@auto-it/conventional-commits": "^11.2.1",
     "@chromatic-com/storybook": "^1.6.1",

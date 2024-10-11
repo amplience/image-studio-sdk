@@ -18,6 +18,12 @@ jobs:
         # Fetch full git history and tags
         run: git fetch --unshallow --tags
 
+      - name: Unset header
+        run: |
+          git config --local --unset http.https://github.com/.extraheader
+          git config --global user.name "Amp Automation"
+          git config --global user.email "68329326+amp-automation@users.noreply.github.com"
+
       - name: Use NVM Node.js version
         uses: actions/setup-node@v4
         with:
