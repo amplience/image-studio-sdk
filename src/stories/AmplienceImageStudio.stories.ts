@@ -117,6 +117,7 @@ export const EditImages_CloseWithoutSendingImage: Story = {
         mimeType: 'image/jpeg',
       },
     ];
+
     const imageStudio = new AmplienceImageStudio({
       baseUrl: IMAGE_STUDIO_URL,
     });
