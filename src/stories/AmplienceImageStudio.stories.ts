@@ -161,6 +161,7 @@ export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
         mimeType: 'image/webp',
       },
     ];
+
     const imageStudio = new AmplienceImageStudio({
       baseUrl: IMAGE_STUDIO_URL,
     });
