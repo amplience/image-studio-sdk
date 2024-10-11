@@ -6,14 +6,13 @@ jobs:
   release:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
-    permissions:
-      contents: write
-      issues: read
-      packages: write
-      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
+        with: 
+          # This token is scoped to public repo's and only has write contents_access
+          # It is specifically required to allow commits back to this repository as part of `auto shipit`
+          token: ${{ secrets.GH_PUBLIC_REPO_CONTENTS_ACCESS }}
 
       - name: Prepare repository
         # Fetch full git history and tags
