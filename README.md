@@ -33,7 +33,7 @@ const sdk = new AmplienceImageStudio();
 
 _Creating a global instance of `AmplienceImageStudio` is advised against, and a new one should be created for each interaction due to shared promise management you may get expected results if you make asynchronous interactions with the same instance._
 
-## ImageStudioOptions
+## AmplienceImageStudioOptions
 When creating an `AmplienceImageStudio` instance, the constructor takes an `AmplienceImageStudioOptions` object. This defines several options for customizing the behaviour of the studio:
 
 | Key | Description | Default | Optional |
