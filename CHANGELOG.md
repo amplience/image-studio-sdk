@@ -1,3 +1,16 @@
+# v0.2.2 (Thu Oct 17 2024)
+
+#### 🐛 Bug Fix
+
+- fix: whitespace change to test release [#23](https://github.com/amplience/image-studio-sdk/pull/23) ([@bennealon](https://github.com/bennealon))
+- build: whitespace change to force build [#22](https://github.com/amplience/image-studio-sdk/pull/22) ([@bennealon](https://github.com/bennealon))
+
+#### Authors: 1
+
+- Ben Nealon ([@bennealon](https://github.com/bennealon))
+
+---
+
 # v0.2.1 (Thu Oct 17 2024)
 
 #### 🐛 Bug Fix
