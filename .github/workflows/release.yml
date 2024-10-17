@@ -15,7 +15,7 @@ jobs:
       # Needed to push packages and write CHANGELOG
       packages: write
       issues: read
-      # Needed to write back to PR to include build info
+      # Needed to write back to PR to include build info 
       pull-requests: write
 
     steps:
