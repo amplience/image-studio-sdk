@@ -12,9 +12,12 @@ jobs:
       statuses: write
       # Needed to push git tags, release
       contents: write
-      ## Needed to push packages
+      # Needed to push packages and write CHANGELOG
       packages: write
       issues: read
+      # Needed to write back to PR to include build info
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
 
