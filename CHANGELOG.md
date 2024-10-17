@@ -1,3 +1,15 @@
+# v0.3.0 (Thu Oct 17 2024)
+
+#### 🚀 Enhancement
+
+- feat: man-1634 allow users to override sdkMetada options [#12](https://github.com/amplience/image-studio-sdk/pull/12) ([@bennealon](https://github.com/bennealon))
+
+#### Authors: 1
+
+- Ben Nealon ([@bennealon](https://github.com/bennealon))
+
+---
+
 # v0.2.3 (Thu Oct 17 2024)
 
 #### 🐛 Bug Fix
