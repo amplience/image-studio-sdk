@@ -1,3 +1,20 @@
+# v0.2.1 (Thu Oct 17 2024)
+
+#### 🐛 Bug Fix
+
+- build: adds auto protected-branch plugin [#20](https://github.com/amplience/image-studio-sdk/pull/20) ([@bennealon](https://github.com/bennealon))
+- fix: whitespace change to trigger build via PR [#19](https://github.com/amplience/image-studio-sdk/pull/19) ([@bennealon](https://github.com/bennealon))
+- fix: whitespace test to trigger PR and build [#18](https://github.com/amplience/image-studio-sdk/pull/18) ([@bennealon](https://github.com/bennealon))
+- fix: whitespace change to test build [#17](https://github.com/amplience/image-studio-sdk/pull/17) ([@bennealon](https://github.com/bennealon))
+- build: remove author [#16](https://github.com/amplience/image-studio-sdk/pull/16) ([@bennealon](https://github.com/bennealon))
+- build: adds in specific token for contents write access [#15](https://github.com/amplience/image-studio-sdk/pull/15) ([@bennealon](https://github.com/bennealon))
+
+#### Authors: 1
+
+- Ben Nealon ([@bennealon](https://github.com/bennealon))
+
+---
+
 # v0.2.0 (Fri Oct 11 2024)
 
 #### 🚀 Enhancement
