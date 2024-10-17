@@ -94,7 +94,7 @@ class AmplienceImageStudioInstance<T> {
 
     const imageStudioUrl =
       route && route.trim().length > 0
-        ? `${domain}/image-studio/${route}`
+        ? `${domain}/image-studio/${route.trim()}`
         : `${domain}/image-studio`;
 
     const newWindow = window.open(imageStudioUrl, windowTarget, windowFeatures);
