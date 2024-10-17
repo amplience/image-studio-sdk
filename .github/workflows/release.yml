@@ -14,6 +14,7 @@ jobs:
       contents: write
       ## Needed to push packages
       packages: write
+      issues: read
     steps:
       - uses: actions/checkout@v4
 
