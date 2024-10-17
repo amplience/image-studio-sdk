@@ -1,0 +1,8 @@
+# Global Code Owners
+* @bennealon
+
+# Automatically released files must be also owned by our @amplience/Sutomation bot team
+# https://www.npmjs.com/package/@auto-it/protected-branch
+package.json    @amplience/Automation 68329326+amp-automation@users.noreply.github.com
+package-lock.json    @amplience/Automation 68329326+amp-automation@users.noreply.github.com
+CHANGELOG.md    @amplience/Automation 68329326+amp-automation@users.noreply.github.com

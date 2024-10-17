@@ -38,6 +38,7 @@
   "keywords": [],
   "devDependencies": {
     "@auto-it/conventional-commits": "^11.2.1",
+    "@auto-it/protected-branch": "^11.2.1",
     "@chromatic-com/storybook": "^1.6.1",
     "@storybook/addon-essentials": "^8.2.1",
     "@storybook/addon-interactions": "^8.2.1",
@@ -61,7 +62,8 @@
   "auto": {
     "plugins": [
       "npm",
-      "conventional-commits"
+      "conventional-commits",
+      "protected-branch"
     ]
   }
 }

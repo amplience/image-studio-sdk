@@ -6,13 +6,14 @@ jobs:
   release:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
-
+    permissions:
+      # Needed to create PR statuses/checks
+      checks: write
+      statuses: write
+      # Needed to push git tags, release
+      contents: write
     steps:
       - uses: actions/checkout@v4
-        with: 
-          # This token is scoped to public repo's and only has write contents_access
-          # It is specifically required to allow commits back to this repository as part of `auto shipit`
-          token: ${{ secrets.GH_PUBLIC_REPO_CONTENTS_ACCESS }}
 
       - name: Prepare repository
         # Fetch full git history and tags
@@ -36,6 +37,9 @@ jobs:
           # environmental vars for actions/setup-node, should use same GH token for both GH_TOKEN and NPM_TOKEN
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # This token is scoped to public repo's and has read|write on actions|contents|PR and issues|metadata readonly
+          # It is specifically required to allow commits back to this repository as part of `auto shipit`
+          PROTECTED_BRANCH_REVIEWER_TOKEN: ${{ secrets.GH_PUBLIC_REPO_CONTENTS_ACCESS }}
         # this project is configured to use the auto-shipit/conventional-commits plugin
         run: |
           npm install --frozen-lockfile
