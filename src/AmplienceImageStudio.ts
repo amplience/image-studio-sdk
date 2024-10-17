@@ -9,7 +9,10 @@ import {
 } from './types';
 
 export type AmplienceImageStudioOptions = {
-  baseUrl: string;
+  domain: string;
+
+  // once set, any options specified will override those in defaultSdkMetadata.
+  sdkMetadataOverride?: SDKMetadata;
 
   windowTarget?: string;
   windowFeatures?: string;
@@ -29,6 +32,7 @@ export class AmplienceImageStudio {
       {
         allowImageSave: true,
         allowLogout: false,
+        allowCreate: false,
       },
       inputImages,
     );
@@ -45,8 +49,10 @@ export class AmplienceImageStudio {
       {
         allowImageSave: false,
         allowLogout: true,
+        allowCreate: true,
       },
       [],
+      'create',
     );
   }
 
@@ -60,6 +66,7 @@ class AmplienceImageStudioInstance<T> {
   private _reject?: (reason: Error) => void;
 
   private launchProps: {
+    imageStudioUrl: string;
     sdkMetadata: SDKMetadata;
     inputImages: SDKImage[];
   };
@@ -73,19 +80,35 @@ class AmplienceImageStudioInstance<T> {
     this.handleEvent = this.handleEvent.bind(this);
   }
 
-  launch(sdkMetadata: SDKMetadata, inputImages: SDKImage[]): Promise<T> {
+  launch(
+    defaultSdkMetadata: SDKMetadata,
+    inputImages: SDKImage[],
+    route: string = '',
+  ): Promise<T> {
     const promise = new Promise<T>((resolve, reject) => {
       this._resolve = resolve;
       this._reject = reject;
     });
 
-    const { baseUrl, windowTarget = '_blank', windowFeatures } = this.options;
+    const { domain, windowTarget = '_blank', windowFeatures } = this.options;
 
-    const newWindow = window.open(baseUrl, windowTarget, windowFeatures);
+    const imageStudioUrl =
+      route && route.trim().length > 0
+        ? `${domain}/image-studio/${route.trim()}`
+        : `${domain}/image-studio`;
+
+    const newWindow = window.open(imageStudioUrl, windowTarget, windowFeatures);
     if (!newWindow) {
       this.reject(new ApplicationBlockedError());
     } else {
+      // If the user specified sdkMetadataOverride in their AmplienceImageStudioOptions, merge with the defaults and prioritze the overridden options.
+      // SDKMetadata contains optional parameters, so both arrays might not contain everything. ImageStudio should cope with partial options being sent.
+      const sdkMetadata: SDKMetadata = this.options?.sdkMetadataOverride
+        ? { ...defaultSdkMetadata, ...this.options.sdkMetadataOverride }
+        : defaultSdkMetadata;
+
       this.launchProps = {
+        imageStudioUrl,
         sdkMetadata,
         inputImages,
       };
@@ -130,9 +153,12 @@ class AmplienceImageStudioInstance<T> {
 
     // on connection/activation, submit the metadata and any input images.
     const message: SDKEvent = {};
-    message.sdkMetadata = this.launchProps.sdkMetadata;
-    message.inputImages = this.launchProps.inputImages;
     message.focus = true;
+    message.sdkMetadata = this.launchProps.sdkMetadata;
+
+    if (this.launchProps.inputImages?.length > 0) {
+      message.inputImages = this.launchProps.inputImages;
+    }
 
     this.sendSDKEvent(message);
   }
@@ -149,7 +175,7 @@ class AmplienceImageStudioInstance<T> {
 
   private sendSDKEvent(event: SDKEvent) {
     if (this.instanceWindow) {
-      this.instanceWindow.postMessage(event, this.options.baseUrl);
+      this.instanceWindow.postMessage(event, '*');
     }
   }
 
