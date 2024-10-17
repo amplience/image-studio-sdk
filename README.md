@@ -71,6 +71,43 @@ if(response.reason == ImageStudioReason.CLOSED) {
 }
 ```
 
+## Releases
+
+_TLDR `auto` will perform automatic canary builds on `push` and the full release (including version bumping) during PR merge._
+
+This project uses `auto` for the release process, a conventional commits plugin handles version bumping based on the commit history. [Docs](https://intuit.github.io/auto/docs/generated/conventional-commits)
+
+The release process follows the configuration [HERE](https://intuit.github.io/auto/docs/build-platforms/github-actions)
+
+We have also included another plugin, `protected-branch` which works around the fact this repo contains branch protection on `main`. At the time of writing, this plugin isnot documented but the code can be found [HERE](https://github.com/intuit/auto/tree/main/plugins/protected-branch)
+
+This project contains a Ruleset for `main`, with the following options enabled:
+```
+- Restrict creations
+- restrict deletions
+- block force pushes
+- Requires a pull request before merging
+    - approvals: 1
+    - dismiss stale pull requests
+    - require review from code owners
+    - require conversation resolution before merging
+```
+
+In order to get around CODEOWNERS being required, we have followed the recommendations for adding @amplience/automation team as owners to `package.json`, `package-lock.json` and `CHANGELOG.md` - this allows `auto` to modify these at release time. The amp automation team also requires `admin` access to this github repo (repo -> settings -> collaborators and teams)
+
+The release process requires a fine grained PAT token to perform the release process: this has been shared to this public repo through `secrets.GH_PUBLIC_REPO_CONTENTS_ACCESS`, the underlying token this references has been scoped to public repo's only. If this pattern is to be used against another project in future, and this is private, please add a PRIVATE variant of this PAT to cover private repos - otherwise add your project to the existing PAT token list of repositories. The purpose of `GH_PUBLIC_REPO_CONTENTS_ACCESS` secret is to cover _only_ public repositories.
+
+The initial part of the release process (checkouts, builds and package write) is controlled by the auto generate `GH_TOKEN` user, we have scoped this user with the correct permissions as found under `permissions:` within [release.yml](.github/workflows/release.yml)
+
+The `GH_PUBLIC_REPO_CONTENTS_ACCESS` PAT is specificially used for the latter `release` portion (ie non-canary builds) and this user requires special privileges to perform package writes, changelog updates and commit's back to the repo itself (this is done via PR). At the time of writing the repository persmissions (through fine grained PAT) are:
+
+```
+- actions: read and write
+- contents: read and write
+- pull-requests: read and write
+- issues: read
+- metadata: read
+```
 
 ## License
 
