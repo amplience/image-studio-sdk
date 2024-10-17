@@ -119,6 +119,7 @@ export const EditImages_CloseWithoutSendingImage: Story = {
         mimeType: 'image/jpeg',
       },
     ];
+
     const imageStudio = new AmplienceImageStudio({
       domain: IMAGE_STUDIO_DOMAIN,
     });
@@ -137,6 +138,7 @@ export const EditImages_SaveWhitelisedImageToContentForm: Story = {
         mimeType: 'image/jpeg',
       },
     ];
+
     const imageStudio = new AmplienceImageStudio({
       domain: IMAGE_STUDIO_DOMAIN,
     });
@@ -161,6 +163,7 @@ export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
         mimeType: 'image/webp',
       },
     ];
+
     const imageStudio = new AmplienceImageStudio({
       domain: IMAGE_STUDIO_DOMAIN,
     });
