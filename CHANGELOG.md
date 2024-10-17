@@ -1,3 +1,15 @@
+# v0.2.3 (Thu Oct 17 2024)
+
+#### 🐛 Bug Fix
+
+- fix: test release process [#25](https://github.com/amplience/image-studio-sdk/pull/25) ([@bennealon](https://github.com/bennealon))
+
+#### Authors: 1
+
+- Ben Nealon ([@bennealon](https://github.com/bennealon))
+
+---
+
 # v0.2.2 (Thu Oct 17 2024)
 
 #### 🐛 Bug Fix
