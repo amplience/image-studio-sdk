@@ -12,6 +12,8 @@ jobs:
       statuses: write
       # Needed to push git tags, release
       contents: write
+      ## Needed to push packages
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
