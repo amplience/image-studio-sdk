@@ -6,7 +6,9 @@ import {
   ImageStudioEvent,
   SDKImage,
   SDKMetadata,
+  ImageStudioEventType,
 } from './types';
+import { ImageSaveEventData } from './types/ImageStudioEventData';
 
 export type AmplienceImageStudioOptions = {
   domain: string;
@@ -134,17 +136,57 @@ class AmplienceImageStudioInstance<T> {
     return promise;
   }
 
-  protected handleEvent(event: { data: ImageStudioEvent }) {
+  /**
+   * Legacy translation layer to allow older versions of Image-Studio to work with newer SDK.
+   * This code can be removed once v1.5.0 of image-studio has been released.
+   * @param event
+   */
+  private translateLegacyImageStudioEvent(event: { data: ImageStudioEvent }) {
+    console.warn('[LEGACY] An old version of Image Studio is being used');
+
+    if (event.data?.connect) {
+      event.data.type = ImageStudioEventType.Connect;
+    }
+
+    if (event.data?.disconnect) {
+      event.data.type = ImageStudioEventType.Disconnect;
+    }
+
     if (event.data?.exportImageInfo) {
-      this.handleExportedImage(event.data?.exportImageInfo);
+      event.data.type = ImageStudioEventType.ImageSave;
+      event.data.data = { image: event.data.exportImageInfo };
+    }
+  }
+
+  protected handleEvent(event: { data: ImageStudioEvent }) {
+    if (event.data && !('type' in event.data)) {
+      // for any events that don't contain the `type` var, these conform to legacy structure.
+      this.translateLegacyImageStudioEvent(event);
     }
 
-    if (event.data?.connect && !this.isActive) {
-      this.handleActivate();
-    }
-
-    if (event.data.disconnect && this.isActive) {
-      this.isActive = false; // window closure is handled by the interval above
+    switch (event.data?.type) {
+      case ImageStudioEventType.Connect:
+        if (!this.isActive) {
+          this.handleActivate();
+        }
+        break;
+      case ImageStudioEventType.Disconnect:
+        if (this.isActive) {
+          this.isActive = false; // window closure is handled by the interval above
+        }
+        break;
+      case ImageStudioEventType.ImageSave:
+        if ((event.data?.data as ImageSaveEventData)?.image) {
+          this.handleExportedImage(
+            (event.data?.data as ImageSaveEventData).image,
+          );
+        }
+        break;
+      default:
+        console.log(
+          `Event received with unspported ImageStudioEventType: ${event.data?.type}`,
+        );
+        break;
     }
   }
 

@@ -20,5 +20,13 @@ module.exports = {
         argsIgnorePattern: '^_',
       },
     ],
+    'no-restricted-syntax': [
+      'error',
+      // Ban just `const` enums:
+      {
+        "selector": "TSEnumDeclaration[const=true]",
+        "message": "CONST Enums are not allowed to reduce drift and promote backwards compatability",
+      },
+    ],
   },
 };

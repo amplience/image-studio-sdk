@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+if [ "$(git branch --show-current)" = "main" ]; then
+  echo "[ERROR] You are trying to commit on main"
+  exit 1
+fi
+
+npm run precommit
