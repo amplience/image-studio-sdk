@@ -54,6 +54,7 @@ _Failing to submit an option to image-studio will not result in any bad behaviou
 | `allowImageSave` | allows content to be saved back to the SDK | `false` |
 | `allowLogout` | allows users to logout | `true` |
 | `allowCreate` | allows users to create new content | `true` |
+|`orgId`| user organisation ID (used for entitlements and credit consumption) | unset
 
 ## Image Studio Actions
 
@@ -81,7 +82,7 @@ const sdk = new AmplienceImageStudio({
 const response = await sdk.editImages([{
     url: 'https://url-to-your-image',
     name: 'image-name',
-    mimeType: 'image/jpeg', 
+    mimeType: 'image/jpeg',
 }]);
 
 if(response.reason == ImageStudioReason.IMAGE) {
@@ -90,7 +91,7 @@ if(response.reason == ImageStudioReason.IMAGE) {
     // {
     //     url: 'https://url-to-your-updated-image',
     //     name: 'updated-image-name',
-    //     mimeType: 'image/jpeg', 
+    //     mimeType: 'image/jpeg',
     // }
 }
 ```
