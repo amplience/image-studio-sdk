@@ -23,7 +23,22 @@ export class AmplienceImageStudio {
 
   constructor(protected options: AmplienceImageStudioOptions) {}
 
-  public withOrgId(orgId: string): AmplienceImageStudio {
+  /**
+   * Encodes the orgId and sets it in sdkMetadata to be passed to the studio
+   * @param orgId - must be decoded plain text string
+   * @returns
+   */
+  public withDecodedOrgId(orgId: string): AmplienceImageStudio {
+    this.defaultMetadata.orgId = btoa(`Organization:${orgId}`);
+    return this;
+  }
+
+  /**
+   * Sets the sdkMetadata orgId to be passed to the studio
+   * @param orgId - must be Base64 encoded string
+   * @returns
+   */
+  public withEncodedOrgId(orgId: string): AmplienceImageStudio {
     this.defaultMetadata.orgId = orgId;
     return this;
   }

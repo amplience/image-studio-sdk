@@ -40,7 +40,8 @@ export const TryMe: Story = {
       domain: IMAGE_STUDIO_DOMAIN,
       sdkMetadataOverride: {},
     },
-    orgId: '',
+    encodedOrgId: '',
+    decodedOrgId: '',
   },
   render: (args) => {
     const wrapper = document.createElement('div');
@@ -49,8 +50,11 @@ export const TryMe: Story = {
     wrapper.style.alignItems = 'center';
 
     const imageStudio = new AmplienceImageStudio(args.options);
-    if (args.orgId) {
-      imageStudio.withOrgId(args.orgId);
+    if (args.encodedOrgId) {
+      imageStudio.withEncodedOrgId(args.orgId);
+    }
+    if (args.decodedOrgId) {
+      imageStudio.withDecodedOrgId(args.decodedOrgId);
     }
     const launch = document.createElement('button');
     launch.innerText = 'Launch';
