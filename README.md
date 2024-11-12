@@ -124,7 +124,8 @@ Here are the options that use this approach:
 
 | Option | Description | Default |
 |:----------|:-|:-:|
-| `.withOrgId('EXAMPLE_ID')` | user organisation ID (used for entitlements and credit consumption)| `` |
+| `.withEncodedOrgId('EXAMPLE_ID')` | Set the user organisation by providing its Base64 encoded ID (used for entitlements and credit consumption)| `` |
+| `.withDecodedOrgId('EXAMPLE_ID')` | Set user organisation by providing its decoded ID (used for entitlements and credit consumption)| `` |
 
 
 ## Releases
