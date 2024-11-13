@@ -117,15 +117,15 @@ Along with the above options, some properties can be set following the builder p
 
 ```js
 const sdk = new AmplienceImageStudio({domain: IMAGE_STUDIO_DOMAIN})
-    .withOrgId('EXAMPLE_ID');
+    .withDecodedOrgId('Org_Exampleid');
 ```
 
 Here are the options that use this approach:
 
 | Option | Description | Default |
 |:----------|:-|:-:|
-| `.withEncodedOrgId('EXAMPLE_ID')` | Set the user organisation by providing its Base64 encoded ID (used for entitlements and credit consumption)| `` |
-| `.withDecodedOrgId('EXAMPLE_ID')` | Set user organisation by providing its decoded ID (used for entitlements and credit consumption)| `` |
+| `.withEncodedOrgId('Org_Exampleid')` | Set the user organisation by providing its Base64 encoded ID (used for entitlements and credit consumption)| `` |
+| `.withDecodedOrgId('Org_Exampleid')` | Set user organisation by providing its decoded ID (used for entitlements and credit consumption)| `` |
 
 
 ## Releases
