@@ -124,8 +124,8 @@ Here are the options that use this approach:
 
 | Option | Description | Default |
 |:----------|:-|:-:|
-| `.withEncodedOrgId('Org_Exampleid')` | Set the user organisation by providing its Base64 encoded ID (used for entitlements and credit consumption)| `` |
-| `.withDecodedOrgId('Org_Exampleid')` | Set user organisation by providing its decoded ID (used for entitlements and credit consumption)| `` |
+| `.withEncodedOrgId('b3JnYW5pemF0aW9u')` | - Set the user organisation to be used for entitlements and credit consumption. <br> - must provide Base64 encoded ID i.e. GQL data| `` |
+| `.withDecodedOrgId('Org_Exampleid')` |  - Set the user organisation to be used for entitlements and credit consumption. <br> - must provide plain text ID i.e. dc-extensions-sdk data| `` |
 
 
 ## Releases
