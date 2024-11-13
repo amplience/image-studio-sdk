@@ -51,7 +51,7 @@ export const TryMe: Story = {
 
     const imageStudio = new AmplienceImageStudio(args.options);
     if (args.encodedOrgId) {
-      imageStudio.withEncodedOrgId(args.orgId);
+      imageStudio.withEncodedOrgId(args.encodedOrgId);
     }
     if (args.decodedOrgId) {
       imageStudio.withDecodedOrgId(args.decodedOrgId);
