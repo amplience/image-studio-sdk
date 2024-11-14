@@ -4,5 +4,6 @@ export * from './ImageStudioEventType';
 export * from './ImageStudioEventData';
 export * from './SdkEvent';
 export * from './SdkEventType';
-export * from './SdkImage';
 export * from './SdkMetadata';
+export * from './SdkEventData';
+export * from './SdkImage';

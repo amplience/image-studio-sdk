@@ -1,12 +1,14 @@
 import { ApplicationBlockedError } from './errors';
 import {
   ImageStudioResponse,
-  SDKEvent,
   ImageStudioReason,
   ImageStudioEvent,
   SDKImage,
   SDKMetadata,
   ImageStudioEventType,
+  LegacyImageStudioEvent,
+  SDKEvent,
+  SDKEventType,
 } from './types';
 import { ImageSaveEventData } from './types/ImageStudioEventData';
 
@@ -141,30 +143,57 @@ class AmplienceImageStudioInstance<T> {
    * This code can be removed once v1.5.0 of image-studio has been released.
    * @param event
    */
-  private translateLegacyImageStudioEvent(event: { data: ImageStudioEvent }) {
+  private translateLegacyImageStudioEvent(
+    data: LegacyImageStudioEvent,
+  ): ImageStudioEvent {
+    if (data?.connect) {
+      /**
+       * To maintain backwards compatability, newer versions of the studio will send both NEW and Legacy message formats for `connect` only.
+       * This means that we will always receive duplicate connection messages, and therefore should NOT translate the legacy message and just wait for the new format.
+       * This version of the SDK is not designed to be backwards compatible with older versions of the studio, which should not be a problem due to them being hosted by us anyway.
+       * If we translate this message, we will double-up on the request, therefore we will purposefully ignore this message
+       */
+      return {
+        type: ImageStudioEventType.Unknown,
+        data: {},
+      };
+    }
+
+    // log line intentionally after the 'connect' message
     console.warn('[LEGACY] An old version of Image Studio is being used');
-
-    if (event.data?.connect) {
-      event.data.type = ImageStudioEventType.Connect;
+    if (data?.disconnect) {
+      return {
+        type: ImageStudioEventType.Disconnect,
+        data: {},
+      };
     }
 
-    if (event.data?.disconnect) {
-      event.data.type = ImageStudioEventType.Disconnect;
+    if (data?.exportImageInfo) {
+      return {
+        type: ImageStudioEventType.ImageSave,
+        data: { image: data.exportImageInfo },
+      };
     }
 
-    if (event.data?.exportImageInfo) {
-      event.data.type = ImageStudioEventType.ImageSave;
-      event.data.data = { image: event.data.exportImageInfo };
-    }
+    return {
+      type: ImageStudioEventType.Unknown,
+      data: {},
+    };
   }
 
   protected handleEvent(event: { data: ImageStudioEvent }) {
+    // for any events that don't contain the `type` var, these conform to legacy structure.
+    let eventData: ImageStudioEvent;
     if (event.data && !('type' in event.data)) {
-      // for any events that don't contain the `type` var, these conform to legacy structure.
-      this.translateLegacyImageStudioEvent(event);
+      eventData = this.translateLegacyImageStudioEvent(event.data);
+      if (eventData.type == ImageStudioEventType.Unknown) {
+        return; // we should ignore any unknown legacy messages.
+      }
+    } else {
+      eventData = event.data;
     }
 
-    switch (event.data?.type) {
+    switch (eventData.type) {
       case ImageStudioEventType.Connect:
         if (!this.isActive) {
           this.handleActivate();
@@ -176,15 +205,11 @@ class AmplienceImageStudioInstance<T> {
         }
         break;
       case ImageStudioEventType.ImageSave:
-        if ((event.data?.data as ImageSaveEventData)?.image) {
-          this.handleExportedImage(
-            (event.data?.data as ImageSaveEventData).image,
-          );
-        }
+        this.handleExportedImage((eventData.data as ImageSaveEventData).image);
         break;
       default:
         console.log(
-          `Event received with unspported ImageStudioEventType: ${event.data?.type}`,
+          `Event received with unspported ImageStudioEventType: ${eventData.type}`,
         );
         break;
     }
@@ -193,16 +218,25 @@ class AmplienceImageStudioInstance<T> {
   private handleActivate() {
     this.isActive = true;
 
-    // on connection/activation, submit the metadata and any input images.
-    const message: SDKEvent = {};
-    message.focus = true;
-    message.sdkMetadata = this.launchProps.sdkMetadata;
+    this.sendSDKEvent({
+      type: SDKEventType.Focus,
+      data: {},
+    });
+    // message.focus = true;
+
+    this.sendSDKEvent({
+      type: SDKEventType.SDKMetadata,
+      data: this.launchProps.sdkMetadata,
+    });
+    // message.sdkMetadata = this.launchProps.sdkMetadata;
 
     if (this.launchProps.inputImages?.length > 0) {
-      message.inputImages = this.launchProps.inputImages;
+      this.sendSDKEvent({
+        type: SDKEventType.ImageInput,
+        data: { images: this.launchProps.inputImages },
+      });
+      // message.inputImages = this.launchProps.inputImages;
     }
-
-    this.sendSDKEvent(message);
   }
 
   private handleExportedImage(image: SDKImage) {

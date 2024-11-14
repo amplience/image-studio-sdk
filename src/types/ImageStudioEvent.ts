@@ -1,3 +1,4 @@
+import { ImageStudioEventData } from './ImageStudioEventData';
 import { ImageStudioEventType } from './ImageStudioEventType';
 import { SDKImage } from './SdkImage';
 
@@ -7,18 +8,20 @@ import { SDKImage } from './SdkImage';
 export interface ImageStudioEvent {
   /**
    * Event Type
-   * undefined signifies legacy vars will exist
    */
   type: ImageStudioEventType;
 
   /**
    * Event Data
    */
-  data?: unknown;
+  data: ImageStudioEventData;
+}
 
-  // BEGIN Legacy vars
+/**
+ * Legacy Interface for Events sent to the SDK from ImageStudio
+ */
+export interface LegacyImageStudioEvent {
   connect?: boolean;
   disconnect?: boolean;
   exportImageInfo?: SDKImage;
-  // END Legacy vars
 }
