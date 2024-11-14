@@ -23,7 +23,29 @@ export type AmplienceImageStudioOptions = {
 };
 
 export class AmplienceImageStudio {
+  private defaultMetadata: SDKMetadata = {};
+
   constructor(protected options: AmplienceImageStudioOptions) {}
+
+  /**
+   * Encodes the orgId and sets it in sdkMetadata to be passed to the studio
+   * @param orgId - must be decoded plain text string
+   * @returns
+   */
+  public withDecodedOrgId(orgId: string): AmplienceImageStudio {
+    this.defaultMetadata.orgId = btoa(`Organization:${orgId}`);
+    return this;
+  }
+
+  /**
+   * Sets the sdkMetadata orgId to be passed to the studio
+   * @param orgId - must be Base64 encoded string
+   * @returns
+   */
+  public withEncodedOrgId(orgId: string): AmplienceImageStudio {
+    this.defaultMetadata.orgId = orgId;
+    return this;
+  }
 
   /**
    * launches image studio to edit the images
@@ -33,6 +55,7 @@ export class AmplienceImageStudio {
   public editImages(inputImages: SDKImage[]): Promise<ImageStudioResponse> {
     const instance = this.createInstance<ImageStudioResponse>();
     return instance.launch(
+      this.defaultMetadata,
       {
         allowImageSave: true,
         allowLogout: false,
@@ -50,6 +73,7 @@ export class AmplienceImageStudio {
   public launch(): Promise<ImageStudioResponse> {
     const instance = this.createInstance<ImageStudioResponse>();
     return instance.launch(
+      this.defaultMetadata,
       {
         allowImageSave: false,
         allowLogout: true,
@@ -86,6 +110,7 @@ class AmplienceImageStudioInstance<T> {
 
   launch(
     defaultSdkMetadata: SDKMetadata,
+    actionSdkMetadata: SDKMetadata,
     inputImages: SDKImage[],
     route: string = '',
   ): Promise<T> {
@@ -108,8 +133,12 @@ class AmplienceImageStudioInstance<T> {
       // If the user specified sdkMetadataOverride in their AmplienceImageStudioOptions, merge with the defaults and prioritze the overridden options.
       // SDKMetadata contains optional parameters, so both arrays might not contain everything. ImageStudio should cope with partial options being sent.
       const sdkMetadata: SDKMetadata = this.options?.sdkMetadataOverride
-        ? { ...defaultSdkMetadata, ...this.options.sdkMetadataOverride }
-        : defaultSdkMetadata;
+        ? {
+            ...defaultSdkMetadata,
+            ...actionSdkMetadata,
+            ...this.options.sdkMetadataOverride,
+          }
+        : { ...defaultSdkMetadata, ...actionSdkMetadata };
 
       this.launchProps = {
         imageStudioUrl,

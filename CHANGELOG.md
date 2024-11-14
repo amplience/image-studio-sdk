@@ -1,3 +1,15 @@
+# v0.4.0 (Wed Nov 13 2024)
+
+#### 🚀 Enhancement
+
+- feat: MAN-1684 pass org id through sdk when launching from dc [#29](https://github.com/amplience/image-studio-sdk/pull/29) ([@simbobs](https://github.com/simbobs))
+
+#### Authors: 1
+
+- Simona Demarco ([@simbobs](https://github.com/simbobs))
+
+---
+
 # v0.3.0 (Thu Oct 17 2024)
 
 #### 🚀 Enhancement

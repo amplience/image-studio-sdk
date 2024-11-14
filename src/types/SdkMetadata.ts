@@ -7,4 +7,5 @@ export interface SDKMetadata {
   allowImageSave?: boolean;
   allowLogout?: boolean;
   allowCreate?: boolean;
+  orgId?: string;
 }

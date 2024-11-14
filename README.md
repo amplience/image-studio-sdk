@@ -32,43 +32,20 @@ const sdk = new AmplienceImageStudio();
 ```
 
 _Creating a global instance of `AmplienceImageStudio` is advised against, and a new one should be created for each interaction due to shared promise management you may get expected results if you make asynchronous interactions with the same instance._
+## AmplienceImageStudio - Quick Start
 
-## AmplienceImageStudioOptions
-When creating an `AmplienceImageStudio` instance, the constructor takes an `AmplienceImageStudioOptions` object. This defines several options for customizing the behaviour of the studio:
-
-| Key | Description | Default | Optional |
-|:----------|:-------------|:-:|:-:|
-| domain |  base domain for your image-studio deployment | - | No |
-| sdkMetadataOverride |    object containing behavioural overrides for image-studio [SDKMetadata](#sdkmetadata)   | {} | Yes |
-| windowTarget | window.open() `target` override, please see [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/open) | '_blank' | Yes |
-| windowFeatures | window.open() `windowFeatures` override, please see [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/open) | '' | Yes |
-
-## SDKMetadata
-
-This SDK controls certain behaviours within image-studio through optional enablement flags.
-
-_Failing to submit an option to image-studio will not result in any bad behaviour. Image-Studio determines and controls the default behaviour of every option, however the structure and options available are controlled by this SDK._
-
-| Option | Description | Default |
-|:----------|:-|:-:|
-| `allowImageSave` | allows content to be saved back to the SDK | `false` |
-| `allowLogout` | allows users to logout | `true` |
-| `allowCreate` | allows users to create new content | `true` |
-
-## Image Studio Actions
+### Image Studio Actions
 
 Each action contains a default set of behavioural options:
-
-_Note that not every option is supplied by default._
 
 | Action | Options |
 |:----------|:-|
 | `editImages` | allowImageSave: true<br>allowLogout: false<br>allowCreate: false |
 | `launch` | allowImageSave: false<br>allowLogout: true<br>allowCreate: true |
 
-The user can override the default action behaviours by adding the relevant options to the `sdkMetadataOverride` member foun within `AmplienceImageStudioOptions`
+The user can override the default action behaviours by adding the relevant options to the [`sdkMetadataOverride`](#sdkmetadata) member found within [`AmplienceImageStudioOptions`](#amplienceimagestudiooptions)
 
-### Edit Images
+#### Edit Images
 
 Image Studio expects an array of images for editing, once the user has editied the images and clicked 'Save Image', the resultant image will be returned within the response object and the Image Studio window will be closed.
 
@@ -81,7 +58,7 @@ const sdk = new AmplienceImageStudio({
 const response = await sdk.editImages([{
     url: 'https://url-to-your-image',
     name: 'image-name',
-    mimeType: 'image/jpeg', 
+    mimeType: 'image/jpeg',
 }]);
 
 if(response.reason == ImageStudioReason.IMAGE) {
@@ -90,12 +67,12 @@ if(response.reason == ImageStudioReason.IMAGE) {
     // {
     //     url: 'https://url-to-your-updated-image',
     //     name: 'updated-image-name',
-    //     mimeType: 'image/jpeg', 
+    //     mimeType: 'image/jpeg',
     // }
 }
 ```
 
-### Launch
+#### Launch
 
 Launches an Image Studio session standalone, which allows the user to select their own image for editing. Users are _not_ able to save content back to their application and will only be able to download their creations locally.
 
@@ -109,6 +86,47 @@ if(response.reason == ImageStudioReason.CLOSED) {
     console.log("Success");
 }
 ```
+
+
+## AmplienceImageStudioOptions
+
+When creating an `AmplienceImageStudio` instance, the constructor takes an `AmplienceImageStudioOptions` object. This defines several options for customizing the behaviour of the studio:
+
+| Key | Description | Default | Optional |
+|:----------|:-------------|:-:|:-:|
+| domain |  base domain for your image-studio deployment | - | No |
+| sdkMetadataOverride |    object containing behavioural overrides for image-studio [SDKMetadata](#sdkmetadata)   | {} | Yes |
+| windowTarget | window.open() `target` override, please see [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/open) | '_blank' | Yes |
+| windowFeatures | window.open() `windowFeatures` override, please see [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/open) | '' | Yes |
+
+### SDKMetadata
+
+This SDK controls certain behaviours within image-studio through optional enablement flags.
+
+_Failing to submit an option to image-studio will not result in any bad behaviour. Image-Studio determines and controls the default behaviour of every option, however the structure and options available are controlled by this SDK._
+
+| Option | Description | Default |
+|:----------|:-|:-:|
+| `allowImageSave` | allows content to be saved back to the SDK | `false` |
+| `allowLogout` | allows users to logout | `true` |
+| `allowCreate` | allows users to create new content | `true` |
+|`orgId`*| user organisation ID (used for entitlements and credit consumption) | ''
+
+Along with the above options, some properties can be set following the builder pattern:
+
+
+```js
+const sdk = new AmplienceImageStudio({domain: IMAGE_STUDIO_DOMAIN})
+    .withDecodedOrgId('Org_Exampleid');
+```
+
+Here are the options that use this approach:
+
+| Option | Description | Default |
+|:----------|:-|:-:|
+| `.withEncodedOrgId('b3JnYW5pemF0aW9u')` | - Set the user organisation to be used for entitlements and credit consumption. <br> - must provide Base64 encoded ID i.e. GQL data| `` |
+| `.withDecodedOrgId('Org_Exampleid')` |  - Set the user organisation to be used for entitlements and credit consumption. <br> - must provide plain text ID i.e. dc-extensions-sdk data| `` |
+
 
 ## Releases
 
