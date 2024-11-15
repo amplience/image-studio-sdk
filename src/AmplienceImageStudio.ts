@@ -113,14 +113,6 @@ class AmplienceImageStudioInstance<T> {
     this.handleEvent = this.handleEvent.bind(this);
   }
 
-  private setUsingLegacyEventFormat(param: boolean) {
-    this.usingLegacyEventFormat = param;
-  }
-
-  private getUsingLegacyEventFormat(): boolean {
-    return this.usingLegacyEventFormat;
-  }
-
   launch(
     defaultSdkMetadata: SDKMetadata,
     actionSdkMetadata: SDKMetadata,
@@ -186,10 +178,9 @@ class AmplienceImageStudioInstance<T> {
     if ('type' in event.data) {
       eventData = event.data as ImageStudioEvent;
     } else {
-      eventData = translateLegacyImageStudioEvent(
-        this.setUsingLegacyEventFormat,
-        event.data,
-      );
+      eventData = translateLegacyImageStudioEvent((using: boolean) => {
+        this.usingLegacyEventFormat = using;
+      }, event.data);
     }
 
     if (eventData?.type) {
@@ -252,7 +243,7 @@ class AmplienceImageStudioInstance<T> {
   }
 
   private sendSDKEvent(event: SDKEvent) {
-    if (this.getUsingLegacyEventFormat()) {
+    if (this.usingLegacyEventFormat) {
       sendLegacySDKEvent(this.instanceWindow, event);
     } else {
       this.instanceWindow?.postMessage(event, '*');

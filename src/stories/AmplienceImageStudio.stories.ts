@@ -59,6 +59,9 @@ export const TryMe: Story = {
     const launch = document.createElement('button');
     launch.innerText = 'Launch';
     launch.onclick = async () => {
+      nameText.nodeValue = '';
+      urlText.nodeValue = '';
+      mimeTypeText.nodeValue = '';
       const inputImages: SDKImage[] = [
         {
           url: args.imageUrl,

@@ -31,7 +31,9 @@ export const translateLegacyImageStudioEvent = (
     } else {
       // If there is no indicator on this message, we must process it to preserve backwards compatability.
       setUsingLegacyEventFormat(true);
-      console.warn('[LEGACY] translating connect message');
+      console.warn(
+        `[LEGACY] Reading backwards compatible studio event for type: ${ImageStudioEventType.Connect}`,
+      );
       return {
         type: ImageStudioEventType.Connect,
         data: {},
@@ -41,7 +43,9 @@ export const translateLegacyImageStudioEvent = (
 
   if (eventData?.disconnect) {
     setUsingLegacyEventFormat(true);
-    console.warn('[LEGACY] translating disconnect message');
+    console.warn(
+      `[LEGACY] Reading backwards compatible studio event for type: ${ImageStudioEventType.Disconnect}`,
+    );
     return {
       type: ImageStudioEventType.Disconnect,
       data: {},
@@ -50,7 +54,9 @@ export const translateLegacyImageStudioEvent = (
 
   if (eventData?.exportImageInfo) {
     setUsingLegacyEventFormat(true);
-    console.warn('[LEGACY] translating exportImageInfo message');
+    console.warn(
+      `[LEGACY] Reading backwards compatible studio event for type: ${ImageStudioEventType.ImageSave}`,
+    );
     return {
       type: ImageStudioEventType.ImageSave,
       data: { image: eventData.exportImageInfo },
@@ -71,13 +77,13 @@ export const sendLegacySDKEvent = (
     switch (event.type) {
       case SDKEventType.Focus:
         console.warn(
-          `[LEGACY] sending backwards compatible studio event for type: ${event.type}`,
+          `[LEGACY] Sending backwards compatible studio event for type: ${event.type}`,
         );
         instanceWindow.postMessage({ focus: true } as LegacySDKEvent, '*');
         break;
       case SDKEventType.SDKMetadata:
         console.warn(
-          `[LEGACY] sending backwards compatible studio event for type: ${event.type}`,
+          `[LEGACY] Sending backwards compatible studio event for type: ${event.type}`,
         );
         instanceWindow.postMessage(
           { sdkMetadata: event.data as SDKMetadata } as LegacySDKEvent,
@@ -86,7 +92,7 @@ export const sendLegacySDKEvent = (
         break;
       case SDKEventType.ImageInput:
         console.warn(
-          `[LEGACY] sending backwards compatible studio event for type: ${event.type}`,
+          `[LEGACY] Sending backwards compatible studio event for type: ${event.type}`,
         );
         instanceWindow.postMessage(
           {
