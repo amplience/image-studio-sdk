@@ -6,11 +6,14 @@ import {
   SDKImage,
   SDKMetadata,
   ImageStudioEventType,
-  LegacyImageStudioEvent,
   SDKEvent,
   SDKEventType,
 } from './types';
 import { ImageSaveEventData } from './types/ImageStudioEventData';
+import {
+  sendLegacySDKEvent,
+  translateLegacyImageStudioEvent,
+} from './utils/LegacyHelpers';
 
 export type AmplienceImageStudioOptions = {
   domain: string;
@@ -104,8 +107,18 @@ class AmplienceImageStudioInstance<T> {
 
   protected pollingInterval: number | undefined;
 
+  private usingLegacyEventFormat: boolean = false;
+
   constructor(protected options: AmplienceImageStudioOptions) {
     this.handleEvent = this.handleEvent.bind(this);
+  }
+
+  private setUsingLegacyEventFormat(param: boolean) {
+    this.usingLegacyEventFormat = param;
+  }
+
+  private getUsingLegacyEventFormat(): boolean {
+    return this.usingLegacyEventFormat;
   }
 
   launch(
@@ -167,80 +180,43 @@ class AmplienceImageStudioInstance<T> {
     return promise;
   }
 
-  /**
-   * Legacy translation layer to allow older versions of Image-Studio to work with newer SDK.
-   * This code can be removed once v1.5.0 of image-studio has been released.
-   * @param event
-   */
-  private translateLegacyImageStudioEvent(
-    data: LegacyImageStudioEvent,
-  ): ImageStudioEvent {
-    if (data?.connect) {
-      /**
-       * To maintain backwards compatability, newer versions of the studio will send both NEW and Legacy message formats for `connect` only.
-       * This means that we will always receive duplicate connection messages, and therefore should NOT translate the legacy message and just wait for the new format.
-       * This version of the SDK is not designed to be backwards compatible with older versions of the studio, which should not be a problem due to them being hosted by us anyway.
-       * If we translate this message, we will double-up on the request, therefore we will purposefully ignore this message
-       */
-      return {
-        type: ImageStudioEventType.Unknown,
-        data: {},
-      };
-    }
-
-    // log line intentionally after the 'connect' message
-    console.warn('[LEGACY] An old version of Image Studio is being used');
-    if (data?.disconnect) {
-      return {
-        type: ImageStudioEventType.Disconnect,
-        data: {},
-      };
-    }
-
-    if (data?.exportImageInfo) {
-      return {
-        type: ImageStudioEventType.ImageSave,
-        data: { image: data.exportImageInfo },
-      };
-    }
-
-    return {
-      type: ImageStudioEventType.Unknown,
-      data: {},
-    };
-  }
-
-  protected handleEvent(event: { data: ImageStudioEvent }) {
+  protected handleEvent(event: MessageEvent) {
     // for any events that don't contain the `type` var, these conform to legacy structure.
-    let eventData: ImageStudioEvent;
-    if (event.data && !('type' in event.data)) {
-      eventData = this.translateLegacyImageStudioEvent(event.data);
-      if (eventData.type == ImageStudioEventType.Unknown) {
-        return; // we should ignore any unknown legacy messages.
-      }
+    let eventData: ImageStudioEvent | null;
+    if ('type' in event.data) {
+      eventData = event.data as ImageStudioEvent;
     } else {
-      eventData = event.data;
+      eventData = translateLegacyImageStudioEvent(
+        this.setUsingLegacyEventFormat,
+        event.data,
+      );
     }
 
-    switch (eventData.type) {
-      case ImageStudioEventType.Connect:
-        if (!this.isActive) {
-          this.handleActivate();
-        }
-        break;
-      case ImageStudioEventType.Disconnect:
-        if (this.isActive) {
-          this.isActive = false; // window closure is handled by the interval above
-        }
-        break;
-      case ImageStudioEventType.ImageSave:
-        this.handleExportedImage((eventData.data as ImageSaveEventData).image);
-        break;
-      default:
-        console.log(
-          `Event received with unspported ImageStudioEventType: ${eventData.type}`,
-        );
-        break;
+    if (eventData?.type) {
+      // This listener could receive any sort of message, only accept those with a type we exect
+      // Its also still possible to get an eventData object with `type` key inside, so we switch on the ones we care about.
+      switch (eventData.type) {
+        case ImageStudioEventType.Connect:
+          if (!this.isActive) {
+            this.handleActivate();
+          }
+          break;
+        case ImageStudioEventType.Disconnect:
+          if (this.isActive) {
+            this.isActive = false; // window closure is handled by the interval above
+          }
+          break;
+        case ImageStudioEventType.ImageSave:
+          this.handleExportedImage(
+            (eventData.data as ImageSaveEventData).image,
+          );
+          break;
+        default:
+          console.log(
+            `Event received with unspported ImageStudioEventType: ${eventData.type}`,
+          );
+          break;
+      }
     }
   }
 
@@ -251,20 +227,17 @@ class AmplienceImageStudioInstance<T> {
       type: SDKEventType.Focus,
       data: {},
     });
-    // message.focus = true;
 
     this.sendSDKEvent({
       type: SDKEventType.SDKMetadata,
       data: this.launchProps.sdkMetadata,
     });
-    // message.sdkMetadata = this.launchProps.sdkMetadata;
 
     if (this.launchProps.inputImages?.length > 0) {
       this.sendSDKEvent({
         type: SDKEventType.ImageInput,
         data: { images: this.launchProps.inputImages },
       });
-      // message.inputImages = this.launchProps.inputImages;
     }
   }
 
@@ -279,8 +252,10 @@ class AmplienceImageStudioInstance<T> {
   }
 
   private sendSDKEvent(event: SDKEvent) {
-    if (this.instanceWindow) {
-      this.instanceWindow.postMessage(event, '*');
+    if (this.getUsingLegacyEventFormat()) {
+      sendLegacySDKEvent(this.instanceWindow, event);
+    } else {
+      this.instanceWindow?.postMessage(event, '*');
     }
   }
 

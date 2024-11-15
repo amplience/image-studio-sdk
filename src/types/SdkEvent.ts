@@ -19,6 +19,7 @@ export interface SDKEvent {
 }
 
 /**
+ * @deprecated
  * Legacy Interface for Events sent to ImageStudio from the SDK
  */
 export interface LegacySDKEvent {
