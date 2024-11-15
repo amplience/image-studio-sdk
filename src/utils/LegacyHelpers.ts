@@ -40,6 +40,7 @@ export const translateLegacyImageStudioEvent = (
   }
 
   if (eventData?.disconnect) {
+    setUsingLegacyEventFormat(true);
     console.warn('[LEGACY] translating disconnect message');
     return {
       type: ImageStudioEventType.Disconnect,
@@ -48,6 +49,7 @@ export const translateLegacyImageStudioEvent = (
   }
 
   if (eventData?.exportImageInfo) {
+    setUsingLegacyEventFormat(true);
     console.warn('[LEGACY] translating exportImageInfo message');
     return {
       type: ImageStudioEventType.ImageSave,
@@ -55,7 +57,6 @@ export const translateLegacyImageStudioEvent = (
     };
   }
 
-  console.warn(`[LEGACY] unknown message during translation: ${eventData}`);
   return null;
 };
 
