@@ -17,6 +17,6 @@ export enum SDKEventType {
   ImageInput = 'IMAGE_INPUT', //data: SDKImageInputEventData
 
   // NoCallback = 'NO_CALLBACK',
-  // Success = 'SUCCESS',
-  // Fail = 'FAIL',
+  Success = 'SUCCESS', //data: {}
+  Fail = 'FAIL', //data: {}
 }

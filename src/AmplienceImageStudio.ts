@@ -9,7 +9,10 @@ import {
   SDKEvent,
   SDKEventType,
 } from './types';
-import { ImageSaveEventData } from './types/ImageStudioEventData';
+import {
+  ImageSaveEventData,
+  ImageStudioEventData,
+} from './types/ImageStudioEventData';
 import {
   sendLegacySDKEvent,
   translateLegacyImageStudioEvent,
@@ -25,10 +28,26 @@ export type AmplienceImageStudioOptions = {
   windowFeatures?: string;
 };
 
+export type EventListenerCallback = (data: ImageStudioEventData) => SDKEvent;
+
 export class AmplienceImageStudio {
+  private eventListeners: Record<string, EventListenerCallback> = {};
   private defaultMetadata: SDKMetadata = {};
 
   constructor(protected options: AmplienceImageStudioOptions) {}
+
+  /**
+   * Adds an event listener callback
+   * @param eventType
+   * @param callback
+   */
+  public withEventListener(
+    eventType: ImageStudioEventType,
+    callback: EventListenerCallback,
+  ): AmplienceImageStudio {
+    this.eventListeners[eventType] = callback;
+    return this;
+  }
 
   /**
    * Encodes the orgId and sets it in sdkMetadata to be passed to the studio
@@ -88,7 +107,10 @@ export class AmplienceImageStudio {
   }
 
   private createInstance<T>() {
-    return new AmplienceImageStudioInstance<T>(this.options);
+    return new AmplienceImageStudioInstance<T>(
+      this.options,
+      this.eventListeners,
+    );
   }
 }
 
@@ -109,7 +131,10 @@ class AmplienceImageStudioInstance<T> {
 
   private usingLegacyEventFormat: boolean = false;
 
-  constructor(protected options: AmplienceImageStudioOptions) {
+  constructor(
+    protected options: AmplienceImageStudioOptions,
+    protected eventListeners: Record<string, EventListenerCallback>,
+  ) {
     this.handleEvent = this.handleEvent.bind(this);
   }
 
@@ -173,6 +198,9 @@ class AmplienceImageStudioInstance<T> {
   }
 
   protected handleEvent(event: MessageEvent) {
+    if (!(event.data instanceof Object)) {
+      return; // any messages without data being an object can be discarded
+    }
     // for any events that don't contain the `type` var, these conform to legacy structure.
     let eventData: ImageStudioEvent | null;
     if ('type' in event.data) {
@@ -198,15 +226,32 @@ class AmplienceImageStudioInstance<T> {
           }
           break;
         case ImageStudioEventType.ImageSave:
-          this.handleExportedImage(
-            (eventData.data as ImageSaveEventData).image,
-          );
+          if (!(ImageStudioEventType.ImageSave in this.eventListeners)) {
+            // legacy behaviour, only trigger if a user hasnt registered custom logic
+            this.handleLegacyExportedImage(
+              (eventData.data as ImageSaveEventData).image,
+            );
+          }
           break;
         default:
           console.log(
             `Event received with unspported ImageStudioEventType: ${eventData.type}`,
           );
           break;
+      }
+
+      // If user has registered a callback for this event type, call it.
+      if (eventData.type in this.eventListeners) {
+        const imageStudioResponse = this.eventListeners[eventData.type]?.(
+          eventData.data,
+        );
+        if (imageStudioResponse) {
+          // send a response back to imageStudio, record which event triggered the response
+          imageStudioResponse.trigger = eventData.type;
+          this.sendSDKEvent(imageStudioResponse);
+        } else {
+          // we need to store a set of default response types per eventType
+        }
       }
     }
   }
@@ -232,7 +277,7 @@ class AmplienceImageStudioInstance<T> {
     }
   }
 
-  private handleExportedImage(image: SDKImage) {
+  private handleLegacyExportedImage(image: SDKImage) {
     this.resolve({
       reason: ImageStudioReason.IMAGE,
       image,

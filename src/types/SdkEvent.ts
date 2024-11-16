@@ -1,3 +1,4 @@
+import { ImageStudioEventType } from './ImageStudioEventType';
 import { SDKEventData } from './SdkEventData';
 import { SDKEventType } from './SdkEventType';
 import { SDKImage } from './SdkImage';
@@ -16,6 +17,11 @@ export interface SDKEvent {
    * SDK Event Data
    */
   data: SDKEventData;
+
+  /**
+   * Image Studio Event that Triggered this Event
+   */
+  trigger?: ImageStudioEventType;
 }
 
 /**
