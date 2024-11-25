@@ -3,16 +3,16 @@ import {
   ImageStudioResponse,
   ImageStudioReason,
   ImageStudioEvent,
+  ImageSaveEventData,
+  ImageStudioEventData,
   SDKImage,
   SDKMetadata,
   ImageStudioEventType,
   SDKEvent,
   SDKEventType,
+  EventListenerCallback,
+  eventListenerCallbackConfig,
 } from './types';
-import {
-  ImageSaveEventData,
-  ImageStudioEventData,
-} from './types/ImageStudioEventData';
 import {
   sendLegacySDKEvent,
   translateLegacyImageStudioEvent,
@@ -27,8 +27,6 @@ export type AmplienceImageStudioOptions = {
   windowTarget?: string;
   windowFeatures?: string;
 };
-
-export type EventListenerCallback = (data: ImageStudioEventData) => SDKEvent;
 
 export class AmplienceImageStudio {
   private eventListeners: Record<string, EventListenerCallback> = {};
@@ -45,7 +43,14 @@ export class AmplienceImageStudio {
     eventType: ImageStudioEventType,
     callback: EventListenerCallback,
   ): AmplienceImageStudio {
-    this.eventListeners[eventType] = callback;
+    // If a configuration exists for the eventType, allow the user to register their event listener
+    if (eventListenerCallbackConfig[eventType]) {
+      this.eventListeners[eventType] = callback;
+    } else {
+      console.warn(
+        `Unable to register event listener with ImageStudioEventType: ${eventType}, no configuration available`,
+      );
+    }
     return this;
   }
 
@@ -131,11 +136,36 @@ class AmplienceImageStudioInstance<T> {
 
   private usingLegacyEventFormat: boolean = false;
 
+  private options: AmplienceImageStudioOptions;
+  private eventListenerCallback: Record<string, EventListenerCallback>;
+
   constructor(
-    protected options: AmplienceImageStudioOptions,
-    protected eventListeners: Record<string, EventListenerCallback>,
+    options: AmplienceImageStudioOptions,
+    eventListeners: Record<string, EventListenerCallback>,
   ) {
+    // binds internal functions so we can use arrow functions as callbacks with this.
     this.handleEvent = this.handleEvent.bind(this);
+    this.handleLegacyImageSave = this.handleLegacyImageSave.bind(this);
+
+    this.options = options;
+
+    // spread any custom user event listeners into the defaults, allows users to override internal behaviour
+    this.eventListenerCallback = {
+      ...this.getInternalEventListeners(),
+      ...eventListeners,
+    };
+  }
+
+  /**
+   * Returns a default list of internal event listeners
+   * The integrator can override these with their own implementations,
+   * in this case those specified explicitly here will not be executed.
+   * @returns list of event listeners
+   */
+  getInternalEventListeners(): Record<string, EventListenerCallback> {
+    return {
+      IMAGE_SAVE: this.handleLegacyImageSave,
+    };
   }
 
   launch(
@@ -212,8 +242,13 @@ class AmplienceImageStudioInstance<T> {
     }
 
     if (eventData?.type) {
-      // This listener could receive any sort of message, only accept those with a type we exect
-      // Its also still possible to get an eventData object with `type` key inside, so we switch on the ones we care about.
+      /**
+       * This listener could receive any sort of message, only accept those with a type we exect
+       * Its also still possible to get an eventData object with `type` key inside, so we switch on the ones we care about.
+       * This block is exclusively for eventData.type's that we intentionally HAVE NOT configured,
+       * therefore users are unable to modify these actions of their behaviour.
+       * When adding in NEW event types, that are configurable, please register your internal logic through `getInternalEventListeners`
+       */
       switch (eventData.type) {
         case ImageStudioEventType.Connect:
           if (!this.isActive) {
@@ -225,32 +260,40 @@ class AmplienceImageStudioInstance<T> {
             this.isActive = false; // window closure is handled by the interval above
           }
           break;
-        case ImageStudioEventType.ImageSave:
-          if (!(ImageStudioEventType.ImageSave in this.eventListeners)) {
-            // legacy behaviour, only trigger if a user hasnt registered custom logic
-            this.handleLegacyExportedImage(
-              (eventData.data as ImageSaveEventData).image,
-            );
-          }
-          break;
         default:
-          console.log(
-            `Event received with unspported ImageStudioEventType: ${eventData.type}`,
-          );
           break;
       }
 
-      // If user has registered a callback for this event type, call it.
-      if (eventData.type in this.eventListeners) {
-        const imageStudioResponse = this.eventListeners[eventData.type]?.(
-          eventData.data,
-        );
-        if (imageStudioResponse) {
-          // send a response back to imageStudio, record which event triggered the response
-          imageStudioResponse.trigger = eventData.type;
-          this.sendSDKEvent(imageStudioResponse);
+      // If there is an eventListenerConfig for this type, we can process a custom event listener.
+      const config = eventListenerCallbackConfig[eventData.type];
+      if (config) {
+        // If there is an event listener callback, process it
+        if (eventData.type in this.eventListenerCallback) {
+          const responseType = this.eventListenerCallback[eventData.type]?.(
+            eventData.data,
+          );
+          if (config.validResponses.includes(responseType)) {
+            this.sendSDKEvent({
+              type: responseType,
+              trigger: eventData.type,
+              data: {},
+            });
+          } else {
+            console.log(
+              `Invalid response type ${responseType} for eventListener with type: ${eventData.type}`,
+            );
+          }
         } else {
-          // we need to store a set of default response types per eventType
+          // No internal, or user callback - so we may need to respond to image-studio with a default SDK Event.
+          // if config.default is undefined, we don't need to respond
+          const defaultEventType = config.defaultResponse;
+          if (defaultEventType != undefined) {
+            this.sendSDKEvent({
+              type: defaultEventType,
+              trigger: eventData.type,
+              data: {},
+            });
+          }
         }
       }
     }
@@ -277,14 +320,16 @@ class AmplienceImageStudioInstance<T> {
     }
   }
 
-  private handleLegacyExportedImage(image: SDKImage) {
+  protected handleLegacyImageSave(data: ImageStudioEventData): SDKEventType {
     this.resolve({
       reason: ImageStudioReason.IMAGE,
-      image,
+      image: (data as ImageSaveEventData).image,
     } as T);
 
     // close image-studio once we receive an image
     this.deactivate();
+
+    return SDKEventType.Success;
   }
 
   private sendSDKEvent(event: SDKEvent) {

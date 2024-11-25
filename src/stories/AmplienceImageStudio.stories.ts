@@ -76,10 +76,7 @@ export const TryMe: Story = {
         nameText.nodeValue = imageData?.image.name;
         urlText.nodeValue = imageData?.image.url;
         mimeTypeText.nodeValue = imageData?.image.mimeType;
-        return {
-          type: SDKEventType.Success,
-          data: {},
-        };
+        return SDKEventType.Success;
       });
 
       if (args.encodedOrgId) {
@@ -112,7 +109,7 @@ export const TryMe: Story = {
   },
 };
 
-export const EditImages_CloseWithoutSendingImage: Story = {
+export const CloseImageStudioWithoutSavingImage: Story = {
   play: async () => {
     const inputImages: SDKImage[] = [
       {
@@ -126,17 +123,14 @@ export const EditImages_CloseWithoutSendingImage: Story = {
       domain: IMAGE_STUDIO_DOMAIN,
     }).withEventListener(ImageStudioEventType.ImageSave, () => {
       expect(true).toBeFalsy(); //cause a failure if the user presses save
-      return {
-        type: SDKEventType.Fail,
-        data: {},
-      };
+      return SDKEventType.Fail;
     });
     const response = await imageStudio.editImages(inputImages);
     expect(response?.reason).toBe(ImageStudioReason.CLOSED);
   },
 };
 
-export const EditImages_SaveWhitelisedImageToContentForm: Story = {
+export const SaveWhitelisedImage_ShouldReportSuccess: Story = {
   play: async () => {
     const inputImages: SDKImage[] = [
       {
@@ -156,17 +150,14 @@ export const EditImages_SaveWhitelisedImageToContentForm: Story = {
       );
       expect(imageData?.image?.name).toBe('DO-NOT-CHANGE-ME');
       expect(imageData?.image?.mimeType).toBe('image/jpeg');
-      return {
-        type: SDKEventType.Success,
-        data: {},
-      };
+      return SDKEventType.Success;
     });
     const response = await imageStudio.editImages(inputImages);
     expect(response?.reason).toBe(ImageStudioReason.CLOSED);
   },
 };
 
-export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
+export const SaveNonWhitelisedImage_ShouldReportSuccees: Story = {
   play: async () => {
     const inputImages: SDKImage[] = [
       {
@@ -186,10 +177,28 @@ export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
       );
       expect(imageData?.image?.name).toBe('DO-NOT-CHANGE-ME');
       expect(imageData?.image?.mimeType).toBe('image/webp');
-      return {
-        type: SDKEventType.Success,
-        data: {},
-      };
+      return SDKEventType.Success;
+    });
+    const response = await imageStudio.editImages(inputImages);
+    expect(response?.reason).toBe(ImageStudioReason.CLOSED);
+  },
+};
+
+export const SaveImage_ShouldReportFailure: Story = {
+  play: async () => {
+    const inputImages: SDKImage[] = [
+      {
+        url: 'https://www.catster.com/wp-content/uploads/2023/11/orange-cat-riding-a-roomba-or-robotic-vacuum_Sharomka_Shutterstock.jpg.webp',
+        name: 'DO-NOT-CHANGE-ME',
+        mimeType: 'image/webp',
+      },
+    ];
+
+    const imageStudio = new AmplienceImageStudio({
+      domain: IMAGE_STUDIO_DOMAIN,
+    }).withEventListener(ImageStudioEventType.ImageSave, () => {
+      // Intenionally send a failure back to image-studio
+      return SDKEventType.Fail;
     });
     const response = await imageStudio.editImages(inputImages);
     expect(response?.reason).toBe(ImageStudioReason.CLOSED);

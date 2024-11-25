@@ -6,10 +6,10 @@ import {
 } from '../AmplienceImageStudio';
 import { ImageStudioReason, SDKImage } from '../types';
 
-const IMAGE_STUDIO_DOMAIN = 'https://app.amplience.net';
+const IMAGE_STUDIO_DOMAIN = 'https://app.amplience-qa.net';
 // const IMAGE_STUDIO_DOMAIN = 'http://localhost:5173';
 
-interface LegacyAmplienceImageStudioProps {
+interface LegacyEventHandlerProps {
   imageUrl: string;
   provider: {
     token: string;
@@ -18,8 +18,8 @@ interface LegacyAmplienceImageStudioProps {
   options: AmplienceImageStudioOptions;
 }
 
-const meta: Meta<LegacyAmplienceImageStudioProps> = {
-  title: 'Legacy Amplience Image Studio',
+const meta: Meta<LegacyEventHandlerProps> = {
+  title: 'Legacy SDK Messaging Tests',
   tags: ['autodocs'],
   argTypes: {},
   render: () => {
@@ -121,7 +121,7 @@ export const TryMe: Story = {
   },
 };
 
-export const EditImages_CloseWithoutSendingImage: Story = {
+export const CloseImageStudioWithoutSavingImage: Story = {
   play: async () => {
     const inputImages: SDKImage[] = [
       {
@@ -140,7 +140,7 @@ export const EditImages_CloseWithoutSendingImage: Story = {
   },
 };
 
-export const EditImages_SaveWhitelisedImageToContentForm: Story = {
+export const SaveWhitelisedImage_ShouldSucceed: Story = {
   play: async () => {
     const inputImages: SDKImage[] = [
       {
@@ -165,7 +165,7 @@ export const EditImages_SaveWhitelisedImageToContentForm: Story = {
   },
 };
 
-export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
+export const SaveNonWhitelisedImage_ShouldSucceed: Story = {
   play: async () => {
     const inputImages: SDKImage[] = [
       {

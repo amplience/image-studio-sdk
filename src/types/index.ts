@@ -1,3 +1,4 @@
+export * from './EventListenerCallback';
 export * from './ImageStudio';
 export * from './ImageStudioEvent';
 export * from './ImageStudioEventType';
