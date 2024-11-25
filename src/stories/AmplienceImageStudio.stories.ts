@@ -7,7 +7,6 @@ import {
 import {
   ImageSaveEventData,
   ImageStudioEventType,
-  ImageStudioReason,
   SDKEventType,
   SDKImage,
 } from '../types';
@@ -125,8 +124,7 @@ export const CloseImageStudioWithoutSavingImage: Story = {
       expect(true).toBeFalsy(); //cause a failure if the user presses save
       return SDKEventType.Fail;
     });
-    const response = await imageStudio.editImages(inputImages);
-    expect(response?.reason).toBe(ImageStudioReason.CLOSED);
+    await imageStudio.editImages(inputImages);
   },
 };
 
@@ -152,8 +150,7 @@ export const SaveWhitelisedImage_ShouldReportSuccess: Story = {
       expect(imageData?.image?.mimeType).toBe('image/jpeg');
       return SDKEventType.Success;
     });
-    const response = await imageStudio.editImages(inputImages);
-    expect(response?.reason).toBe(ImageStudioReason.CLOSED);
+    await imageStudio.editImages(inputImages);
   },
 };
 
@@ -179,8 +176,7 @@ export const SaveNonWhitelisedImage_ShouldReportSuccees: Story = {
       expect(imageData?.image?.mimeType).toBe('image/webp');
       return SDKEventType.Success;
     });
-    const response = await imageStudio.editImages(inputImages);
-    expect(response?.reason).toBe(ImageStudioReason.CLOSED);
+    await imageStudio.editImages(inputImages);
   },
 };
 
@@ -200,8 +196,26 @@ export const SaveImage_ShouldReportFailure: Story = {
       // Intenionally send a failure back to image-studio
       return SDKEventType.Fail;
     });
-    const response = await imageStudio.editImages(inputImages);
-    expect(response?.reason).toBe(ImageStudioReason.CLOSED);
+    await imageStudio.editImages(inputImages);
+  },
+};
+
+export const EventListener_NullResponseShouldTriggerDefaultResponse: Story = {
+  play: async () => {
+    const inputImages: SDKImage[] = [
+      {
+        url: 'https://www.catster.com/wp-content/uploads/2023/11/orange-cat-riding-a-roomba-or-robotic-vacuum_Sharomka_Shutterstock.jpg.webp',
+        name: 'DO-NOT-CHANGE-ME',
+        mimeType: 'image/webp',
+      },
+    ];
+
+    const imageStudio = new AmplienceImageStudio({
+      domain: IMAGE_STUDIO_DOMAIN,
+    }).withEventListener(ImageStudioEventType.ImageSave, () => {
+      return null; // should resolve SDKEventType.Success
+    });
+    await imageStudio.editImages(inputImages);
   },
 };
 
@@ -210,7 +224,6 @@ export const LaunchStandalone: Story = {
     const imageStudio = new AmplienceImageStudio({
       domain: IMAGE_STUDIO_DOMAIN,
     });
-    const response = await imageStudio.launch();
-    expect(response?.reason).toBe(ImageStudioReason.CLOSED);
+    await imageStudio.launch();
   },
 };

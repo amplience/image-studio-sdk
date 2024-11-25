@@ -5,10 +5,11 @@ import { SDKEventType } from './SdkEventType';
 /**
  * Callback function definition for Event Listeners
  * @param data The Event Data object that was sent from Image Studio for this event.
+ * @returns a valid SDKEventType, or null to signify submitting the default configured response
  */
 export type EventListenerCallback = (
   data: ImageStudioEventData,
-) => SDKEventType;
+) => SDKEventType | null;
 
 /**
  * Interface for defining SDK response expectations
@@ -29,7 +30,6 @@ export const eventListenerCallbackConfig: Record<
   EventListenerCallbackConfig | undefined
 > = {
   // BEGIN Intentionally notConfigured
-  [ImageStudioEventType.Unknown]: undefined,
   [ImageStudioEventType.Connect]: undefined,
   [ImageStudioEventType.Disconnect]: undefined,
   // END Intentionally notConfigured

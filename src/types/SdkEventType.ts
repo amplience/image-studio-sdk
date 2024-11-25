@@ -11,12 +11,10 @@
  * You are encouraged to migrate to a new ENUM to enforrce backwards comatability.
  */
 export enum SDKEventType {
-  Unknown = 'UNKNOWN', //data: {}
   Focus = 'FOCUS', //data: {}
   SDKMetadata = 'SDKMETADATA', //data: SDKMetadata
   ImageInput = 'IMAGE_INPUT', //data: SDKImageInputEventData
 
-  // NoCallback = 'NO_CALLBACK',
   Success = 'SUCCESS', //data: {}
   Fail = 'FAIL', //data: {}
 }

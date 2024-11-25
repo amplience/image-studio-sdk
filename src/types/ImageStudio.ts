@@ -1,6 +1,7 @@
 import { SDKImage } from './SdkImage';
 
 /**
+ * @deprecated
  * Reason for promise resolution
  */
 export enum ImageStudioReason {
@@ -12,6 +13,13 @@ export enum ImageStudioReason {
  * Image Studio launch response
  */
 export type ImageStudioResponse = {
-  reason: ImageStudioReason;
+  /**
+   * @deprecated
+   */
+  reason?: ImageStudioReason;
+
+  /**
+   * @deprecated
+   */
   image?: SDKImage;
 };

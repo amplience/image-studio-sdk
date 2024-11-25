@@ -12,7 +12,6 @@
  */
 
 export enum ImageStudioEventType {
-  Unknown = 'UNKNOWN', //data: {}
   Connect = 'CONNECT', //data: {}
   Disconnect = 'DISCONNECT', //data: {}
   ImageSave = 'IMAGE_SAVE', //data: ImageSaveEventData

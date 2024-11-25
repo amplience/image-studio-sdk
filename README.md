@@ -54,22 +54,20 @@ _Note: Image Studio currently only uses the first image you submit via this call
 ```js
 const sdk = new AmplienceImageStudio({
     domain: IMAGE_STUDIO_DOMAIN,
+}).withEventListener(ImageStudioEventType.ImageSave, (data) => {
+    const imageData = data as ImageSaveEventData;
+    // imageData.url = 'https://url-to-your-updated-image',
+    // imageData.name = 'updated-image-name',
+    // imageData.mimeType = 'image/jpeg',
+    return SDKEventType.Success;
 });
-const response = await sdk.editImages([{
+
+// This action launches the studio, and resolves a successful promise once the session is closed
+await sdk.editImages([{
     url: 'https://url-to-your-image',
     name: 'image-name',
     mimeType: 'image/jpeg',
 }]);
-
-if(response.reason == ImageStudioReason.IMAGE) {
-    console.log(response.image);
-    // Example Image Response
-    // {
-    //     url: 'https://url-to-your-updated-image',
-    //     name: 'updated-image-name',
-    //     mimeType: 'image/jpeg',
-    // }
-}
 ```
 
 #### Launch
@@ -80,11 +78,9 @@ Launches an Image Studio session standalone, which allows the user to select the
 const sdk = new AmplienceImageStudio({
     domain: IMAGE_STUDIO_DOMAIN,
 });
-const response = await sdk.launch();
 
-if(response.reason == ImageStudioReason.CLOSED) {
-    console.log("Success");
-}
+// This action launches the studio in create mode, resolves a successful promise once the session is closed
+await sdk.launch();
 ```
 
 
@@ -122,10 +118,18 @@ const sdk = new AmplienceImageStudio({domain: IMAGE_STUDIO_DOMAIN})
 
 Here are the options that use this approach:
 
-| Option | Description | Default |
-|:----------|:-|:-:|
-| `.withEncodedOrgId('b3JnYW5pemF0aW9u')` | - Set the user organisation to be used for entitlements and credit consumption. <br> - must provide Base64 encoded ID i.e. GQL data| `` |
-| `.withDecodedOrgId('Org_Exampleid')` |  - Set the user organisation to be used for entitlements and credit consumption. <br> - must provide plain text ID i.e. dc-extensions-sdk data| `` |
+| Option | Description |
+|:----------|:-|
+| `.withEventListener(ImageStudioEventType.ImageSave, () => {return null;})` | - Allows for users to listen for, and respond to ImageStudioEvents. <br> - User callback must conform to [EventListenerCallback](#eventlistenercallback) <br> - `null` response signifies to use default studio response |
+| `.withEncodedOrgId('b3JnYW5pemF0aW9u')` | - Set the user organisation to be used for entitlements and credit consumption. <br> - must provide Base64 encoded ID i.e. GQL data|
+| `.withDecodedOrgId('Org_Exampleid')` |  - Set the user organisation to be used for entitlements and credit consumption. <br> - must provide plain text ID i.e. dc-extensions-sdk data|
+
+### EventListenerCallback
+Your callback will fire upon receiving the [ImageStudoEventType](./src/types/ImageStudioEventType.ts) that you scubscribed to when registering the callback.
+
+Event Listeners Callbacks must either return a valid SDKEventType or NULL. 
+Event Listener Callbacks have [Configurations](./src/types/EventListenerCallback.ts) that dictate the valid SDKEventType's that a user can resolve, once validated an SDKEvent will be fired back to ImageStudio, these allow a user to react to Image Studio events and submit reactive responses to the Studio.
+If a user resolves NULL, the SDK will lookup the `default` Image Studio response from the config, if this is `undefined`, then no response is sent to Image Studio.
 
 
 ## Releases

@@ -267,23 +267,31 @@ class AmplienceImageStudioInstance<T> {
       // If there is an eventListenerConfig for this type, we can process a custom event listener.
       const config = eventListenerCallbackConfig[eventData.type];
       if (config) {
+        let sendDefaultResponse = false;
         // If there is an event listener callback, process it
         if (eventData.type in this.eventListenerCallback) {
           const responseType = this.eventListenerCallback[eventData.type]?.(
             eventData.data,
           );
-          if (config.validResponses.includes(responseType)) {
+          if (responseType && config.validResponses.includes(responseType)) {
             this.sendSDKEvent({
               type: responseType,
               trigger: eventData.type,
               data: {},
             });
+          } else if (responseType == null) {
+            // null responses signify to send the default response from the config
+            sendDefaultResponse = true;
           } else {
             console.log(
               `Invalid response type ${responseType} for eventListener with type: ${eventData.type}`,
             );
           }
         } else {
+          sendDefaultResponse = true;
+        }
+
+        if (sendDefaultResponse) {
           // No internal, or user callback - so we may need to respond to image-studio with a default SDK Event.
           // if config.default is undefined, we don't need to respond
           const defaultEventType = config.defaultResponse;
