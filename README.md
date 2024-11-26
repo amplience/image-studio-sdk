@@ -2,7 +2,7 @@
 
 > Official SDK for embedding Amplience Image Studio
 
-This SDK is designed to help embed the Amplience Image Studio into business admin interfaces, allowing merchants, marketers and authors to generate images as part of their existing tools and workflow.
+This SDK is designed to help embed the Amplience Image Studio into business admin interfaces, allowing merchants, marketers and authors to generate images as part of their existing tools and workflow. 
 
 
 ## Installation
