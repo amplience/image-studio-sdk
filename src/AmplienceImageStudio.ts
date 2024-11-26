@@ -243,7 +243,7 @@ class AmplienceImageStudioInstance<T> {
 
     if (eventData?.type) {
       /**
-       * This listener could receive any sort of message, only accept those with a type we exect
+       * This listener could receive any sort of message, only accept those with a type we expect
        * Its also still possible to get an eventData object with `type` key inside, so we switch on the ones we care about.
        * This block is exclusively for eventData.type's that we intentionally HAVE NOT configured,
        * therefore users are unable to modify these actions of their behaviour.
