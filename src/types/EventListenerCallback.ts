@@ -13,11 +13,11 @@ export type EventListenerCallback = (
 
 /**
  * Interface for defining SDK response expectations
- * @param default dictates the default SDKEventType to send to image-studio, a special undefined denotes we should not submit a response to image-studio.
+ * @param default dictates the default SDKEventType to send to image-studio, a special null denotes we should not submit a response to image-studio.
  * @param valid list of valid response types we can accept from custom callbacks.
  */
 export interface EventListenerCallbackConfig {
-  defaultResponse: SDKEventType | undefined;
+  defaultResponse: SDKEventType | null;
   validResponses: SDKEventType[];
 }
 
@@ -29,10 +29,11 @@ export const eventListenerCallbackConfig: Record<
   ImageStudioEventType,
   EventListenerCallbackConfig | undefined
 > = {
-  // BEGIN Intentionally notConfigured
+  // BEGIN Intentionally undefined
   [ImageStudioEventType.Connect]: undefined,
   [ImageStudioEventType.Disconnect]: undefined,
-  // END Intentionally notConfigured
+  // END Intentionally undefined
+
   [ImageStudioEventType.ImageSave]: {
     defaultResponse: SDKEventType.Success,
     validResponses: [SDKEventType.Success, SDKEventType.Fail],

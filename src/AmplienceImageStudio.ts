@@ -293,9 +293,9 @@ class AmplienceImageStudioInstance<T> {
 
         if (sendDefaultResponse) {
           // No internal, or user callback - so we may need to respond to image-studio with a default SDK Event.
-          // if config.default is undefined, we don't need to respond
+          // if config.default is null, we don't need to respond
           const defaultEventType = config.defaultResponse;
-          if (defaultEventType != undefined) {
+          if (defaultEventType != null) {
             this.sendSDKEvent({
               type: defaultEventType,
               trigger: eventData.type,
