@@ -8,7 +8,7 @@
  *
  * These values are serialized/deserialized across post messages
  * renaming will cause problems, and should be avoided.
- * You are encouraged to migrate to a new ENUM to enforrce backwards comatability.
+ * You are encouraged to migrate to a new ENUM to enforce backwards comatability.
  */
 
 export enum ImageStudioEventType {
