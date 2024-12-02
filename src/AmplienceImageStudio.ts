@@ -1,12 +1,22 @@
 import { ApplicationBlockedError } from './errors';
 import {
   ImageStudioResponse,
-  SDKEvent,
   ImageStudioReason,
   ImageStudioEvent,
+  ImageSaveEventData,
+  ImageStudioEventData,
   SDKImage,
   SDKMetadata,
+  ImageStudioEventType,
+  SDKEvent,
+  SDKEventType,
+  EventListenerCallback,
+  eventListenerCallbackConfig,
 } from './types';
+import {
+  sendLegacySDKEvent,
+  translateLegacyImageStudioEvent,
+} from './utils/LegacyHelpers';
 
 export type AmplienceImageStudioOptions = {
   domain: string;
@@ -19,9 +29,30 @@ export type AmplienceImageStudioOptions = {
 };
 
 export class AmplienceImageStudio {
+  private eventListeners: Record<string, EventListenerCallback> = {};
   private defaultMetadata: SDKMetadata = {};
 
   constructor(protected options: AmplienceImageStudioOptions) {}
+
+  /**
+   * Adds an event listener callback
+   * @param eventType
+   * @param callback
+   */
+  public withEventListener(
+    eventType: ImageStudioEventType,
+    callback: EventListenerCallback,
+  ): AmplienceImageStudio {
+    // If a configuration exists for the eventType, allow the user to register their event listener
+    if (eventListenerCallbackConfig[eventType]) {
+      this.eventListeners[eventType] = callback;
+    } else {
+      console.warn(
+        `Unable to register event listener with ImageStudioEventType: ${eventType}, no configuration available`,
+      );
+    }
+    return this;
+  }
 
   /**
    * Encodes the orgId and sets it in sdkMetadata to be passed to the studio
@@ -81,7 +112,10 @@ export class AmplienceImageStudio {
   }
 
   private createInstance<T>() {
-    return new AmplienceImageStudioInstance<T>(this.options);
+    return new AmplienceImageStudioInstance<T>(
+      this.options,
+      this.eventListeners,
+    );
   }
 }
 
@@ -100,8 +134,38 @@ class AmplienceImageStudioInstance<T> {
 
   protected pollingInterval: number | undefined;
 
-  constructor(protected options: AmplienceImageStudioOptions) {
+  private usingLegacyEventFormat: boolean = false;
+
+  private options: AmplienceImageStudioOptions;
+  private eventListenerCallback: Record<string, EventListenerCallback>;
+
+  constructor(
+    options: AmplienceImageStudioOptions,
+    eventListeners: Record<string, EventListenerCallback>,
+  ) {
+    // binds internal functions so we can use arrow functions as callbacks with this.
     this.handleEvent = this.handleEvent.bind(this);
+    this.handleLegacyImageSave = this.handleLegacyImageSave.bind(this);
+
+    this.options = options;
+
+    // spread any custom user event listeners into the defaults, allows users to override internal behaviour
+    this.eventListenerCallback = {
+      ...this.getInternalEventListeners(),
+      ...eventListeners,
+    };
+  }
+
+  /**
+   * Returns a default list of internal event listeners
+   * The integrator can override these with their own implementations,
+   * in this case those specified explicitly here will not be executed.
+   * @returns list of event listeners
+   */
+  getInternalEventListeners(): Record<string, EventListenerCallback> {
+    return {
+      IMAGE_SAVE: this.handleLegacyImageSave,
+    };
   }
 
   launch(
@@ -163,48 +227,124 @@ class AmplienceImageStudioInstance<T> {
     return promise;
   }
 
-  protected handleEvent(event: { data: ImageStudioEvent }) {
-    if (event.data?.exportImageInfo) {
-      this.handleExportedImage(event.data?.exportImageInfo);
+  protected handleEvent(event: MessageEvent) {
+    if (!(event.data instanceof Object)) {
+      return; // any messages without data being an object can be discarded
+    }
+    // for any events that don't contain the `type` var, these conform to legacy structure.
+    let eventData: ImageStudioEvent | null;
+    if ('type' in event.data) {
+      eventData = event.data as ImageStudioEvent;
+    } else {
+      eventData = translateLegacyImageStudioEvent((using: boolean) => {
+        this.usingLegacyEventFormat = using;
+      }, event.data);
     }
 
-    if (event.data?.connect && !this.isActive) {
-      this.handleActivate();
-    }
+    if (eventData?.type) {
+      /**
+       * This listener could receive any sort of message, only accept those with a type we expect
+       * Its also still possible to get an eventData object with `type` key inside, so we switch on the ones we care about.
+       * This block is exclusively for eventData.type's that we intentionally HAVE NOT configured,
+       * therefore users are unable to modify these actions of their behaviour.
+       * When adding in NEW event types, that are configurable, please register your internal logic through `getInternalEventListeners`
+       */
+      switch (eventData.type) {
+        case ImageStudioEventType.Connect:
+          if (!this.isActive) {
+            this.handleActivate();
+          }
+          break;
+        case ImageStudioEventType.Disconnect:
+          if (this.isActive) {
+            this.isActive = false; // window closure is handled by the interval above
+          }
+          break;
+        default:
+          break;
+      }
 
-    if (event.data.disconnect && this.isActive) {
-      this.isActive = false; // window closure is handled by the interval above
+      // If there is an eventListenerConfig for this type, we can process a custom event listener.
+      const config = eventListenerCallbackConfig[eventData.type];
+      if (config) {
+        let sendDefaultResponse = false;
+        // If there is an event listener callback, process it
+        if (eventData.type in this.eventListenerCallback) {
+          const responseType = this.eventListenerCallback[eventData.type]?.(
+            eventData.data,
+          );
+          if (responseType && config.validResponses.includes(responseType)) {
+            this.sendSDKEvent({
+              type: responseType,
+              trigger: eventData.type,
+              data: {},
+            });
+          } else if (responseType == null) {
+            // null responses signify to send the default response from the config
+            sendDefaultResponse = true;
+          } else {
+            console.log(
+              `Invalid response type ${responseType} for eventListener with type: ${eventData.type}`,
+            );
+          }
+        } else {
+          sendDefaultResponse = true;
+        }
+
+        if (sendDefaultResponse) {
+          // No internal, or user callback - so we may need to respond to image-studio with a default SDK Event.
+          // if config.default is null, we don't need to respond
+          const defaultEventType = config.defaultResponse;
+          if (defaultEventType != null) {
+            this.sendSDKEvent({
+              type: defaultEventType,
+              trigger: eventData.type,
+              data: {},
+            });
+          }
+        }
+      }
     }
   }
 
   private handleActivate() {
     this.isActive = true;
 
-    // on connection/activation, submit the metadata and any input images.
-    const message: SDKEvent = {};
-    message.focus = true;
-    message.sdkMetadata = this.launchProps.sdkMetadata;
+    this.sendSDKEvent({
+      type: SDKEventType.Focus,
+      data: {},
+    });
+
+    this.sendSDKEvent({
+      type: SDKEventType.SDKMetadata,
+      data: this.launchProps.sdkMetadata,
+    });
 
     if (this.launchProps.inputImages?.length > 0) {
-      message.inputImages = this.launchProps.inputImages;
+      this.sendSDKEvent({
+        type: SDKEventType.ImageInput,
+        data: { images: this.launchProps.inputImages },
+      });
     }
-
-    this.sendSDKEvent(message);
   }
 
-  private handleExportedImage(image: SDKImage) {
+  protected handleLegacyImageSave(data: ImageStudioEventData): SDKEventType {
     this.resolve({
       reason: ImageStudioReason.IMAGE,
-      image,
+      image: (data as ImageSaveEventData).image,
     } as T);
 
     // close image-studio once we receive an image
     this.deactivate();
+
+    return SDKEventType.Success;
   }
 
   private sendSDKEvent(event: SDKEvent) {
-    if (this.instanceWindow) {
-      this.instanceWindow.postMessage(event, '*');
+    if (this.usingLegacyEventFormat) {
+      sendLegacySDKEvent(this.instanceWindow, event);
+    } else {
+      this.instanceWindow?.postMessage(event, '*');
     }
   }
 

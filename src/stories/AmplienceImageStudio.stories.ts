@@ -4,10 +4,15 @@ import {
   AmplienceImageStudio,
   AmplienceImageStudioOptions,
 } from '../AmplienceImageStudio';
-import { ImageStudioReason, SDKImage } from '../types';
+import {
+  ImageSaveEventData,
+  ImageStudioEventType,
+  SDKEventType,
+  SDKImage,
+} from '../types';
 
-const IMAGE_STUDIO_DOMAIN = 'https://app.amplience.net';
-// const IMAGE_STUDIO_DOMAIN = 'http://localhost:5173';
+// const IMAGE_STUDIO_DOMAIN = 'https://app.amplience.net';
+const IMAGE_STUDIO_DOMAIN = 'http://localhost:5173';
 
 interface AmplienceImageStudioProps {
   imageUrl: string;
@@ -49,16 +54,12 @@ export const TryMe: Story = {
     wrapper.style.flexDirection = 'column';
     wrapper.style.alignItems = 'center';
 
-    const imageStudio = new AmplienceImageStudio(args.options);
-    if (args.encodedOrgId) {
-      imageStudio.withEncodedOrgId(args.encodedOrgId);
-    }
-    if (args.decodedOrgId) {
-      imageStudio.withDecodedOrgId(args.decodedOrgId);
-    }
     const launch = document.createElement('button');
     launch.innerText = 'Launch';
     launch.onclick = async () => {
+      nameText.nodeValue = 'Launched';
+      urlText.nodeValue = '';
+      mimeTypeText.nodeValue = '';
       const inputImages: SDKImage[] = [
         {
           url: args.imageUrl,
@@ -66,38 +67,27 @@ export const TryMe: Story = {
           mimeType: args.mimeType,
         },
       ];
-      imageStudio.editImages(inputImages).then(
-        (result) => {
-          switch (result?.reason) {
-            case ImageStudioReason.IMAGE:
-              if (result?.image) {
-                nameText.nodeValue = result.image.name;
-                urlText.nodeValue = result.image.url;
-                mimeTypeText.nodeValue = result.image.mimeType;
-              } else {
-                nameText.nodeValue = 'Unexpected Response Format';
-                urlText.nodeValue = '';
-                mimeTypeText.nodeValue = '';
-              }
-              break;
-            case ImageStudioReason.CLOSED:
-              nameText.nodeValue = 'Closed without Image';
-              urlText.nodeValue = '';
-              mimeTypeText.nodeValue = '';
-              break;
-            default:
-              nameText.nodeValue = 'Unknown Image Studio Reason';
-              urlText.nodeValue = '';
-              mimeTypeText.nodeValue = '';
-              break;
-          }
-        },
-        (error) => {
-          nameText.nodeValue = `Failed with error: ${error}`;
-          urlText.nodeValue = '';
-          mimeTypeText.nodeValue = '';
-        },
-      );
+
+      const imageStudio = new AmplienceImageStudio(
+        args.options,
+      ).withEventListener(ImageStudioEventType.ImageSave, (data) => {
+        const imageData = data as ImageSaveEventData;
+        nameText.nodeValue = imageData?.image.name;
+        urlText.nodeValue = imageData?.image.url;
+        mimeTypeText.nodeValue = imageData?.image.mimeType;
+        return SDKEventType.Success;
+      });
+
+      if (args.encodedOrgId) {
+        imageStudio.withEncodedOrgId(args.encodedOrgId);
+      }
+      if (args.decodedOrgId) {
+        imageStudio.withDecodedOrgId(args.decodedOrgId);
+      }
+      await imageStudio.editImages(inputImages);
+      nameText.nodeValue = 'Closed';
+      urlText.nodeValue = '';
+      mimeTypeText.nodeValue = '';
     };
     wrapper.appendChild(launch);
 
@@ -118,7 +108,7 @@ export const TryMe: Story = {
   },
 };
 
-export const EditImages_CloseWithoutSendingImage: Story = {
+export const CloseImageStudioWithoutSavingImage: Story = {
   play: async () => {
     const inputImages: SDKImage[] = [
       {
@@ -130,14 +120,15 @@ export const EditImages_CloseWithoutSendingImage: Story = {
 
     const imageStudio = new AmplienceImageStudio({
       domain: IMAGE_STUDIO_DOMAIN,
+    }).withEventListener(ImageStudioEventType.ImageSave, () => {
+      expect(true).toBeFalsy(); //cause a failure if the user presses save
+      return SDKEventType.Fail;
     });
-    const response = await imageStudio.editImages(inputImages);
-
-    expect(response?.reason).toBe(ImageStudioReason.CLOSED);
+    await imageStudio.editImages(inputImages);
   },
 };
 
-export const EditImages_SaveWhitelisedImageToContentForm: Story = {
+export const SaveWhitelisedImage_ShouldReportSuccess: Story = {
   play: async () => {
     const inputImages: SDKImage[] = [
       {
@@ -149,20 +140,21 @@ export const EditImages_SaveWhitelisedImageToContentForm: Story = {
 
     const imageStudio = new AmplienceImageStudio({
       domain: IMAGE_STUDIO_DOMAIN,
+    }).withEventListener(ImageStudioEventType.ImageSave, (data) => {
+      // Aslong as the user doesnt make any changes to the image, expected to receive the same URl back as we submitted to the studio
+      const imageData = data as ImageSaveEventData;
+      expect(imageData?.image?.url).toBe(
+        'https://thumbs.amplience-qa.net/r/53ac8ad8-b4a5-40a2-a613-d10a9ef0c225',
+      );
+      expect(imageData?.image?.name).toBe('DO-NOT-CHANGE-ME');
+      expect(imageData?.image?.mimeType).toBe('image/jpeg');
+      return SDKEventType.Success;
     });
-    const response = await imageStudio.editImages(inputImages);
-
-    expect(response?.reason).toBe(ImageStudioReason.IMAGE);
-    // Aslong as the user doesnt make any changes to the image, expected to receive the same URl back as we submitted to the studio
-    expect(response?.image?.url).toBe(
-      'https://thumbs.amplience-qa.net/r/53ac8ad8-b4a5-40a2-a613-d10a9ef0c225',
-    );
-    expect(response?.image?.name).toBe('DO-NOT-CHANGE-ME');
-    expect(response?.image?.mimeType).toBe('image/jpeg');
+    await imageStudio.editImages(inputImages);
   },
 };
 
-export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
+export const SaveNonWhitelisedImage_ShouldReportSuccees: Story = {
   play: async () => {
     const inputImages: SDKImage[] = [
       {
@@ -174,16 +166,56 @@ export const EditImages_SaveNonWhitelisedImageToContentForm: Story = {
 
     const imageStudio = new AmplienceImageStudio({
       domain: IMAGE_STUDIO_DOMAIN,
+    }).withEventListener(ImageStudioEventType.ImageSave, (data) => {
+      // Aslong as the user doesnt make any changes to the image, expected to receive the same URl back as we submitted to the studio
+      const imageData = data as ImageSaveEventData;
+      expect(imageData?.image?.url).not.toBe(
+        'https://www.catster.com/wp-content/uploads/2023/11/orange-cat-riding-a-roomba-or-robotic-vacuum_Sharomka_Shutterstock.jpg.webp',
+      );
+      expect(imageData?.image?.name).toBe('DO-NOT-CHANGE-ME');
+      expect(imageData?.image?.mimeType).toBe('image/webp');
+      return SDKEventType.Success;
     });
-    const response = await imageStudio.editImages(inputImages);
+    await imageStudio.editImages(inputImages);
+  },
+};
 
-    expect(response?.reason).toBe(ImageStudioReason.IMAGE);
-    // Aslong as the user doesnt make any changes to the image, expected to receive the same URl back as we submitted to the studio
-    expect(response?.image?.url).not.toBe(
-      'https://www.catster.com/wp-content/uploads/2023/11/orange-cat-riding-a-roomba-or-robotic-vacuum_Sharomka_Shutterstock.jpg.webp',
-    );
-    expect(response?.image?.name).toBe('DO-NOT-CHANGE-ME');
-    expect(response?.image?.mimeType).toBe('image/webp');
+export const SaveImage_ShouldReportFailure: Story = {
+  play: async () => {
+    const inputImages: SDKImage[] = [
+      {
+        url: 'https://www.catster.com/wp-content/uploads/2023/11/orange-cat-riding-a-roomba-or-robotic-vacuum_Sharomka_Shutterstock.jpg.webp',
+        name: 'DO-NOT-CHANGE-ME',
+        mimeType: 'image/webp',
+      },
+    ];
+
+    const imageStudio = new AmplienceImageStudio({
+      domain: IMAGE_STUDIO_DOMAIN,
+    }).withEventListener(ImageStudioEventType.ImageSave, () => {
+      // Intenionally send a failure back to image-studio
+      return SDKEventType.Fail;
+    });
+    await imageStudio.editImages(inputImages);
+  },
+};
+
+export const EventListener_NullResponseShouldTriggerDefaultResponse: Story = {
+  play: async () => {
+    const inputImages: SDKImage[] = [
+      {
+        url: 'https://www.catster.com/wp-content/uploads/2023/11/orange-cat-riding-a-roomba-or-robotic-vacuum_Sharomka_Shutterstock.jpg.webp',
+        name: 'DO-NOT-CHANGE-ME',
+        mimeType: 'image/webp',
+      },
+    ];
+
+    const imageStudio = new AmplienceImageStudio({
+      domain: IMAGE_STUDIO_DOMAIN,
+    }).withEventListener(ImageStudioEventType.ImageSave, () => {
+      return null; // should resolve SDKEventType.Success
+    });
+    await imageStudio.editImages(inputImages);
   },
 };
 
@@ -192,7 +224,6 @@ export const LaunchStandalone: Story = {
     const imageStudio = new AmplienceImageStudio({
       domain: IMAGE_STUDIO_DOMAIN,
     });
-    const response = await imageStudio.launch();
-    expect(response?.reason).toBe(ImageStudioReason.CLOSED);
+    await imageStudio.launch();
   },
 };

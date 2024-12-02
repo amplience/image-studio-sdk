@@ -1,1 +1,1 @@
-export * from "./ApplicationBlockedError";
+export * from './ApplicationBlockedError';

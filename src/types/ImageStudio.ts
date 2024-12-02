@@ -1,4 +1,7 @@
+import { SDKImage } from './SdkImage';
+
 /**
+ * @deprecated
  * Reason for promise resolution
  */
 export enum ImageStudioReason {
@@ -7,18 +10,16 @@ export enum ImageStudioReason {
 }
 
 /**
- * Container interface for image representation
- */
-export interface SDKImage {
-  url: string;
-  name: string;
-  mimeType: string;
-}
-
-/**
  * Image Studio launch response
  */
 export type ImageStudioResponse = {
-  reason: ImageStudioReason;
+  /**
+   * @deprecated
+   */
+  reason?: ImageStudioReason;
+
+  /**
+   * @deprecated
+   */
   image?: SDKImage;
 };
