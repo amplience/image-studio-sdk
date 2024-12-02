@@ -1,3 +1,15 @@
+# v0.5.0 (Mon Dec 02 2024)
+
+#### 🚀 Enhancement
+
+- feat: man-1701 sdk communication model update [#28](https://github.com/amplience/image-studio-sdk/pull/28) ([@bennealon](https://github.com/bennealon))
+
+#### Authors: 1
+
+- Ben Nealon ([@bennealon](https://github.com/bennealon))
+
+---
+
 # v0.4.0 (Wed Nov 13 2024)
 
 #### 🚀 Enhancement
