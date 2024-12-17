@@ -1,3 +1,15 @@
+# v0.5.1 (Tue Dec 17 2024)
+
+#### 🐛 Bug Fix
+
+- fix: man-1780 support for async Event Callbacks [#32](https://github.com/amplience/image-studio-sdk/pull/32) ([@bennealon](https://github.com/bennealon))
+
+#### Authors: 1
+
+- Ben Nealon ([@bennealon](https://github.com/bennealon))
+
+---
+
 # v0.5.0 (Mon Dec 02 2024)
 
 #### 🚀 Enhancement
