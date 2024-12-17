@@ -9,7 +9,7 @@ import { SDKEventType } from './SdkEventType';
  */
 export type EventListenerCallback = (
   data: ImageStudioEventData,
-) => SDKEventType | null;
+) => Promise<SDKEventType | null>;
 
 /**
  * Interface for defining SDK response expectations

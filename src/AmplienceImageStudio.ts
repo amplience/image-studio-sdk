@@ -227,7 +227,7 @@ class AmplienceImageStudioInstance<T> {
     return promise;
   }
 
-  protected handleEvent(event: MessageEvent) {
+  protected async handleEvent(event: MessageEvent) {
     if (!(event.data instanceof Object)) {
       return; // any messages without data being an object can be discarded
     }
@@ -267,28 +267,32 @@ class AmplienceImageStudioInstance<T> {
       // If there is an eventListenerConfig for this type, we can process a custom event listener.
       const config = eventListenerCallbackConfig[eventData.type];
       if (config) {
-        let sendDefaultResponse = false;
+        let sendDefaultResponse = true;
         // If there is an event listener callback, process it
         if (eventData.type in this.eventListenerCallback) {
-          const responseType = this.eventListenerCallback[eventData.type]?.(
-            eventData.data,
-          );
-          if (responseType && config.validResponses.includes(responseType)) {
-            this.sendSDKEvent({
-              type: responseType,
-              trigger: eventData.type,
-              data: {},
-            });
-          } else if (responseType == null) {
-            // null responses signify to send the default response from the config
-            sendDefaultResponse = true;
-          } else {
+          try {
+            const responseType = await this.eventListenerCallback[
+              eventData.type
+            ]?.(eventData.data);
+
+            if (responseType && config.validResponses.includes(responseType)) {
+              sendDefaultResponse = false;
+              this.sendSDKEvent({
+                type: responseType,
+                trigger: eventData.type,
+                data: {},
+              });
+            } else if (responseType) {
+              // user supplied a response we weren't expecting, send the default response to prevent any breaks in ImageStudio flow
+              console.log(
+                `Invalid response type ${responseType} for eventListener with type: ${eventData.type}`,
+              ); // else, null responses signifys intentional send the default response from the config
+            }
+          } catch (error) {
             console.log(
-              `Invalid response type ${responseType} for eventListener with type: ${eventData.type}`,
+              `Users Event Listener has thrown an error: '${(error as Error).message}'`,
             );
           }
-        } else {
-          sendDefaultResponse = true;
         }
 
         if (sendDefaultResponse) {
@@ -328,7 +332,9 @@ class AmplienceImageStudioInstance<T> {
     }
   }
 
-  protected handleLegacyImageSave(data: ImageStudioEventData): SDKEventType {
+  protected async handleLegacyImageSave(
+    data: ImageStudioEventData,
+  ): Promise<SDKEventType> {
     this.resolve({
       reason: ImageStudioReason.IMAGE,
       image: (data as ImageSaveEventData).image,
